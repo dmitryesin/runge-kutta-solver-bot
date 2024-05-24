@@ -1,0 +1,5 @@
+matplotlib==3.8.2
+numpy==1.26.3
+py4j==0.10.9.7
+python-telegram-bot==20.7
+sympy==1.12
