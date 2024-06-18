@@ -8,7 +8,7 @@ This bot is developed to solve 1st and 2nd order differential equations using th
 
 ### Prerequisites
 
-- Python 3.6+
+- Python 3.9 or above
 - Java 8
 - Maven
 
