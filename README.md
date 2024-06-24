@@ -53,14 +53,9 @@ mvn clean install
 ```
 
 ## Usage
-To use the bot, you need to run [main.py](solver-bot/src/main/python/main.py) first.
+To use the bot, you need to run [main.py](solver-bot/src/main/python/main.py).
 ```bash
-cd solver-bot/src/main/python
-python3 main.py # python main.py on Windows
-```
-Next, when [main.py](solver-bot/src/main/python/main.py) is already running, you'll need to return to your home folder and run [Main.java](solver-common/src/main/java/com/solver/Main.java).
-```bash
-java -cp solver-common/target/solver-common-0.1.jar com.solver.Main
+python3 solver-bot/src/main/python/main.py # <python> on Windows
 ```
 
 ## License
