@@ -16,19 +16,22 @@ from telegram.ext import (
     filters
 )
 
-CONFIG = json.load(open("config/config.json", "r"))
+PY_DIR = "solver-bot/src/main/python/"
+
+CONFIG = json.load(open(
+    PY_DIR + "config/config.json", "r"))
 
 ORDER, EQUATION, INITIAL_X, INITIAL_Y, REACH_POINT, STEP_SIZE = range(6)
 
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    with open("assets/texts/START.txt", "r", encoding="utf-8") as file:
+    with open(PY_DIR + "assets/texts/START.txt", "r", encoding="utf-8") as file:
         file_text = file.read()
     await update.message.reply_text(file_text)
 
 
 async def help(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    with open("assets/texts/HELP.txt", "r", encoding="utf-8") as file:
+    with open(PY_DIR + "assets/texts/HELP.txt", "r", encoding="utf-8") as file:
         file_text = file.read()
     await update.message.reply_text(file_text)
 

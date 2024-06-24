@@ -1,7 +1,10 @@
 import re
 import json
 
-MATH_FUNCTIONS = json.load(open("mathematics/function_list.json", "r"))
+PY_DIR = "solver-bot/src/main/python/"
+
+MATH_FUNCTIONS = json.load(open(
+    PY_DIR + "mathematics/function_list.json", "r"))
 
 
 def replace_math_functions(equation):

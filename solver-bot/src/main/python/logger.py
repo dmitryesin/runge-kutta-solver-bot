@@ -9,7 +9,7 @@ formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(messag
 console_handler = logging.StreamHandler()
 console_handler.setFormatter(formatter)
 
-file_handler = logging.FileHandler("logs/bot.log")
+file_handler = logging.FileHandler("solver-bot/src/main/python/logs/bot.log")
 file_handler.setFormatter(formatter)
 
 logging.basicConfig(level=logging.INFO, handlers=[console_handler, file_handler])
