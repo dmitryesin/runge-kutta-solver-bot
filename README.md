@@ -6,6 +6,10 @@ This bot is developed to solve 1st and 2nd order differential equations using th
 
 ## Installation
 
+If you have Docker, you can install the program in a couple of clicks. All you need to do is replace the line `YOUR_TOKEN` with your Telegram bot token in the [dockerfile](dockerfile) itself.
+
+If you don't have Docker, you can use the following instruction to install it manually.
+
 ### Prerequisites
 
 - Python 3.9 or above
