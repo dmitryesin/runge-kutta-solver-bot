@@ -3,11 +3,11 @@ FROM python:3.9-slim
 # Set the working directory
 WORKDIR /runge-kutta-solver-bot
 
-# Update package lists and install necessary packages including git and maven
-RUN apt-get update && apt-get install -y git maven
+# Update package lists and install necessary packages including maven
+RUN apt-get update && apt-get install -y maven
 
-# Clone the repository into the working directory
-RUN git clone https://github.com/dmitryesin/runge-kutta-solver-bot ./
+# Copy all files into the working directory
+COPY . /runge-kutta-solver-bot
 
 # Install Python dependencies
 RUN pip install -r requirements.txt
