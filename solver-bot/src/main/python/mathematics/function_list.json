@@ -32,6 +32,7 @@
     "PI": "pi",
     "Pi": "pi",
     "log": "log",
+    "lg": "log",
     "log10": "log10",
     "ln": "log10"
 }
