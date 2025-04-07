@@ -1,22 +1,27 @@
 package com.solver;
 
-import py4j.GatewayServer;
+import org.springframework.stereotype.Component;
 
 import java.util.List;
 import java.util.ArrayList;
 import java.util.function.BiFunction;
 
+@Component
 public class Main {
-
     private int order;
     private BiFunction<Double, double[], double[]> equationFunction;
     private double initial_x;
     private double[] initial_y;
     private double reach_point;
     private double step_size;
+    private int method;
 
     private List<Double> xValues;
     private List<double[]> yValues;
+
+    public void setMethod(int method) {
+        this.method = method;
+    }
 
     public void setOrder(int order) {
         this.order = order;
@@ -30,12 +35,8 @@ public class Main {
         this.initial_x = initial_x;
     }
 
-    public void setInitialY(double initial_y) {
-        this.initial_y = new double[]{initial_y};
-    }
-
-    public void setInitialY(double initial_y1, double initial_y2) {
-        this.initial_y = new double[]{initial_y1, initial_y2};
+    public void setInitialY(double... initial_y) {
+        this.initial_y = initial_y;
     }
 
     public void setReachPoint(double reach_point) {
@@ -47,43 +48,46 @@ public class Main {
     }
 
     public double[] getSolution() {
-        List<Double> xValues = new ArrayList<>();
-        List<double[]> yValues = new ArrayList<>();
+        xValues = new ArrayList<>();
+        yValues = new ArrayList<>();
 
         double x = initial_x;
         double[] y = initial_y.clone();
 
-        xValues.clear();
-        yValues.clear();
         while (x < reach_point - 1e-10) {
-            double[] result = MethodRungeKutta.method(equationFunction, x, y, step_size);
+            double[] result;
+            switch (method) {
+                case 1:
+                    result = NumericalMethods.methodEuler(equationFunction, x, y, step_size);
+                    break;
+                case 2:
+                    result = NumericalMethods.methodEulerImproved(equationFunction, x, y, step_size);
+                    break;
+                case 4:
+                    result = NumericalMethods.methodRungeKutta(equationFunction, x, y, step_size);
+                    break;
+                case 7:
+                    result = NumericalMethods.methodDormandPrince(equationFunction, x, y, step_size);
+                    break;
+                default:
+                    throw new IllegalArgumentException("Invalid method value: " + method);
+            }
             x = result[0];
             y = new double[result.length - 1];
             System.arraycopy(result, 1, y, 0, result.length - 1);
 
             xValues.add(x);
-            yValues.add(y);
+            yValues.add(y.clone());
         }
-        this.xValues = xValues;
-        this.yValues = yValues;
 
-        if (order == 1) {
-            return new double[]{x, y[y.length - 1]};
-        } else if (order == 2) {
-            return new double[]{x, y[0], y[y.length - 1]};
-        }
-        return null;
+        double[] finalSolution = new double[1 + y.length];
+        finalSolution[0] = x;
+        System.arraycopy(y, 0, finalSolution, 1, y.length);
+
+        return finalSolution;
     }
 
     public List<Double> getXValues() { return xValues; }
 
     public List<double[]> getYValues() { return yValues; }
-
-    public static void main(String[] args) {
-        Main main = new Main();
-        
-        GatewayServer server = new GatewayServer(main);
-        
-        server.start();
-    }
 }

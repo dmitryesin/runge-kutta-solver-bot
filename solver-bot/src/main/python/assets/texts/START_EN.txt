@@ -1,0 +1,5 @@
+This Telegram bot was developed to calculate differential equations using numerical methods. 
+
+Select <b>Settings</b> to change the numerical method. 
+
+Select <b>Solve</b> to start. 
