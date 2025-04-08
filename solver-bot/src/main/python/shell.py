@@ -27,10 +27,12 @@ from telegram.ext import (
     filters
 )
 
-r = redis.Redis(host='localhost',
-                port=6379,
-                db=0,
-                decode_responses=True)
+r = redis.Redis(
+    host='localhost',
+    port=6379,
+    db=0,
+    decode_responses=True
+)
 
 PY_DIR = "solver-bot/src/main/python/"
 
@@ -353,21 +355,19 @@ async def equation(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not is_valid_symbols:
         logger.info("User %s used unsupported symbol: %s", user.id, error_message)
         await update.message.reply_text(
-            LANG_TEXTS[current_language]['symbols_error'] + 
+            LANG_TEXTS[current_language]['symbols_error'] +
             f"<b><i>{error_message}</i></b>. " +
             LANG_TEXTS[current_language]['try_again'],
             parse_mode="HTML"
         )
-
         return EQUATION
-    
+
     if not validate_parentheses(update.message.text):
         logger.info("User %s used incorrect parentheses.", user.id)
         await update.message.reply_text(
             LANG_TEXTS[current_language]["parentheses_error"] + " " +
             LANG_TEXTS[current_language]["try_again"]
         )
-
         return EQUATION
 
     formatted_equation, order = format_equation(update.message.text)
@@ -378,7 +378,6 @@ async def equation(update: Update, context: ContextTypes.DEFAULT_TYPE):
             LANG_TEXTS[current_language]["equation_error"] + " " +
             LANG_TEXTS[current_language]["try_again"]
         )
-
         return EQUATION
 
     logger.info("Formatted Equation of %s: %s", user.id, formatted_equation)
@@ -400,7 +399,7 @@ async def initial_x(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     user = update.message.from_user
     user_input = update.message.text.strip()
-    
+
     current_language = context.user_data.get('language', DEFAULT_LANGUAGE)
 
     try:
@@ -411,7 +410,6 @@ async def initial_x(update: Update, context: ContextTypes.DEFAULT_TYPE):
             LANG_TEXTS[current_language]["invalid_initial_x"] + " " +
             LANG_TEXTS[current_language]["try_again"]
         )
-
         return INITIAL_X
 
     logger.info("Initial x of %s: %s", user.id, user_input)
@@ -423,10 +421,8 @@ async def initial_x(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text(
             LANG_TEXTS[current_language]["enter_y"]
         )
-
         return INITIAL_Y
-
-    elif int(context.user_data['order']) >= 2:
+    else:
         await update.message.reply_text(
             LANG_TEXTS[current_language]["enter_y_multiple"]
         )
@@ -451,9 +447,9 @@ async def initial_y(update: Update, context: ContextTypes.DEFAULT_TYPE):
     except ValueError:
         invalid_value = next(
             (
-                value for value in inputs 
+                value for value in inputs
                 if not value.replace('.', '', 1).replace('-', '', 1).isdigit()
-            ), 
+            ),
             None
         )
         logger.info("Invalid initial y input by %s: %s", user.id, user_input)
@@ -463,7 +459,6 @@ async def initial_y(update: Update, context: ContextTypes.DEFAULT_TYPE):
             LANG_TEXTS[current_language]["try_again"],
             parse_mode="HTML"
         )
-
         return INITIAL_Y
 
     if len(inputs) != order:
@@ -476,7 +471,6 @@ async def initial_y(update: Update, context: ContextTypes.DEFAULT_TYPE):
             LANG_TEXTS[current_language]["try_again"],
             parse_mode="HTML"
         )
-
         return INITIAL_Y
 
     logger.info("Initial y of %s: %s", user.id, user_input)
@@ -494,7 +488,7 @@ async def reach_point(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     user = update.message.from_user
     user_input = update.message.text.strip()
-    
+
     current_language = context.user_data.get('language', DEFAULT_LANGUAGE)
 
     try:
@@ -505,7 +499,6 @@ async def reach_point(update: Update, context: ContextTypes.DEFAULT_TYPE):
             LANG_TEXTS[current_language]["invalid_reach_point"] + " " +
             LANG_TEXTS[current_language]["try_again"]
         )
-
         return REACH_POINT
 
     logger.info("Reach point of %s: %s", user.id, user_input)
@@ -523,7 +516,7 @@ async def step_size(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     user = update.message.from_user
     user_input = update.message.text.strip()
-    
+
     current_language = context.user_data.get('language', DEFAULT_LANGUAGE)
 
     try:
@@ -534,7 +527,6 @@ async def step_size(update: Update, context: ContextTypes.DEFAULT_TYPE):
             LANG_TEXTS[current_language]["invalid_step_size"] + " " +
             LANG_TEXTS[current_language]["try_again"]
         )
-
         return STEP_SIZE
 
     logger.info("Step size of %s: %s", user.id, user_input)
@@ -553,7 +545,7 @@ async def step_size(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     new_reply_markup = InlineKeyboardMarkup(keyboard)
 
-    if result == None:
+    if result is None:
         logger.info("User %s used unsupported symbols.", user.id)
 
         await save_user_parameters(context)
@@ -563,7 +555,6 @@ async def step_size(update: Update, context: ContextTypes.DEFAULT_TYPE):
             LANG_TEXTS[current_language]["try_again"],
             reply_markup=new_reply_markup
         )
-
         return MENU
 
     plot_graph = plot_solution(get_x_values(),
@@ -614,12 +605,10 @@ async def cancel(update: Update, context: ContextTypes.DEFAULT_TYPE):
             LANG_TEXTS[current_language]["cancel"],
             reply_markup=new_reply_markup
         )
-
         return MENU
     else:
         if update.message:
             await update.message.delete()
-
         return current_state
 
 

@@ -1,5 +1,5 @@
-import matplotlib.pyplot as plt
 import io
+import matplotlib.pyplot as plt
 
 def plot_solution(x_values, y_values, order):
     plt.clf()
