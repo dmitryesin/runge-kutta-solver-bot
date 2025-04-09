@@ -78,14 +78,21 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         await save_user_parameters(context)
 
-    keyboard = [[
-        InlineKeyboardButton(
-            LANG_TEXTS[current_language]["solve"],
-            callback_data="solve"),
-        InlineKeyboardButton(
-            LANG_TEXTS[current_language]["settings"],
-            callback_data="settings")
-    ]]
+    keyboard = [
+        [
+            InlineKeyboardButton(
+                LANG_TEXTS[current_language]["solve"],
+                callback_data="solve"),
+            InlineKeyboardButton(
+                LANG_TEXTS[current_language]["settings"],
+                callback_data="settings")
+        ],
+        [
+            InlineKeyboardButton(
+                LANG_TEXTS[current_language]["solve_history"],
+                callback_data="solve_history")
+        ]
+    ]
 
     with open(PY_DIR + "assets/texts/START_EN.txt", "r", encoding="utf-8") as file:
         start_en = file.read()
@@ -304,6 +311,30 @@ async def settings_language(update: Update, context: ContextTypes.DEFAULT_TYPE):
     ]
 
     new_text = LANG_TEXTS[current_language]["settings_menu"]
+    new_reply_markup = InlineKeyboardMarkup(keyboard)
+
+    if query.message.text != new_text or query.message.reply_markup != new_reply_markup:
+        await query.edit_message_text(
+            new_text,
+            reply_markup=new_reply_markup
+        )
+
+    return MENU
+
+
+async def solve_history(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    query = update.callback_query
+    await query.answer()
+
+    current_language = context.user_data.get('language', DEFAULT_LANGUAGE)
+
+    keyboard = [
+        [InlineKeyboardButton(
+            LANG_TEXTS[current_language]["back"],
+            callback_data="back")]
+    ]
+
+    new_text = LANG_TEXTS[current_language]["solve_history_menu"]
     new_reply_markup = InlineKeyboardMarkup(keyboard)
 
     if query.message.text != new_text or query.message.reply_markup != new_reply_markup:
@@ -637,7 +668,8 @@ def main() -> None:
              CallbackQueryHandler(
                  method, pattern="^method_(euler|modified_euler|runge_kutta|dormand_prince)$"),
              CallbackQueryHandler(rounding, pattern="^(4|6|8|16)$"),
-             CallbackQueryHandler(language, pattern="^(en|ru)$")],
+             CallbackQueryHandler(language, pattern="^(en|ru)$"),
+             CallbackQueryHandler(solve_history, pattern="^solve_history$")],
             EQUATION:
             [MessageHandler(filters.TEXT & ~filters.COMMAND, equation)],
             INITIAL_X:

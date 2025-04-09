@@ -2,6 +2,8 @@
     "en": {
         "solve": "Solve",
         "solve_over": "Solve Over",
+        "solve_history": "Solution History",
+        "solve_history_menu": "Solution history menu. Choose an option:",
         "settings": "Settings",
         "settings_menu": "Settings menu. Choose an option:",
         "change_method": "Change Numerical Method",
@@ -36,6 +38,8 @@
     "ru": {
         "solve": "Решить",
         "solve_over": "Решить Заново",
+        "solve_history": "История Решений",
+        "solve_history_menu": "Меню истории решений. Выберите опцию:",
         "settings": "Настройки",
         "settings_menu": "Меню настроек. Выберите опцию:",
         "change_method": "Изменить Численный Метод",
