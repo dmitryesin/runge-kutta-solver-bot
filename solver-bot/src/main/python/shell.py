@@ -1,5 +1,5 @@
 import json
-import redis
+import psycopg2
 
 from logger import logger
 from plotting.plotter import plot_solution
@@ -27,11 +27,12 @@ from telegram.ext import (
     filters
 )
 
-r = redis.Redis(
-    host='localhost',
-    port=6379,
-    db=0,
-    decode_responses=True
+psql = psycopg2.connect(
+    dbname="postgres",
+    user="postgres",
+    password="postgres",
+    host="localhost",
+    port="5432"
 )
 
 PY_DIR = "solver-bot/src/main/python/"
@@ -53,21 +54,12 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.edited_message:
         return MENU
 
-    user_id = update.effective_user.id
-    user_key = f"user:{user_id}:settings"
+    user_settings = await get_user_settings_from_psql(update.effective_user.id)
+    context.user_data['method'] = user_settings.get('method', DEFAULT_METHOD)
+    context.user_data['rounding'] = user_settings.get('rounding', DEFAULT_ROUNDING)
+    context.user_data['language'] = user_settings.get('language', DEFAULT_LANGUAGE)
 
-    if r.exists(user_key):
-        user_settings = r.hgetall(user_key)
-        context.user_data['method'] = user_settings.get(
-            'method', DEFAULT_METHOD)
-        context.user_data['rounding'] = user_settings.get(
-            'rounding', DEFAULT_ROUNDING)
-        context.user_data['language'] = user_settings.get(
-            'language', DEFAULT_LANGUAGE)
-    else:
-        context.user_data['method'] = DEFAULT_METHOD
-        context.user_data['rounding'] = DEFAULT_ROUNDING
-        context.user_data['language'] = DEFAULT_LANGUAGE
+    await save_user_settings_to_psql(update.effective_user.id, context.user_data)
 
     current_state = context.user_data.get("state", None)
     current_language = context.user_data.get('language', DEFAULT_LANGUAGE)
@@ -76,7 +68,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         user = update.message.from_user
         logger.info("User %s canceled solving.", user.id)
 
-        await save_user_parameters(context)
+        await save_user_settings(context)
 
     keyboard = [
         [
@@ -161,9 +153,7 @@ async def method(update: Update, context: ContextTypes.DEFAULT_TYPE):
     current_method = query.data
     context.user_data['method'] = current_method
 
-    user_id = update.effective_user.id
-    user_key = f"user:{user_id}:settings"
-    r.hset(user_key, 'method', current_method)
+    await save_user_settings_to_psql(update.effective_user.id, context.user_data)
 
     await settings_method(update, context)
 
@@ -224,9 +214,7 @@ async def rounding(update: Update, context: ContextTypes.DEFAULT_TYPE):
     current_rounding = query.data
     context.user_data['rounding'] = current_rounding
 
-    user_id = update.effective_user.id
-    user_key = f"user:{user_id}:settings"
-    r.hset(user_key, 'rounding', current_rounding)
+    await save_user_settings_to_psql(update.effective_user.id, context.user_data)
 
     await settings_rounding(update, context)
 
@@ -283,9 +271,7 @@ async def language(update: Update, context: ContextTypes.DEFAULT_TYPE):
     current_language = query.data
     context.user_data['language'] = current_language
 
-    user_id = update.effective_user.id
-    user_key = f"user:{user_id}:settings"
-    r.hset(user_key, 'language', current_language)
+    await save_user_settings_to_psql(update.effective_user.id, context.user_data)
 
     await settings_language(update, context)
 
@@ -579,7 +565,7 @@ async def step_size(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if result is None:
         logger.info("User %s used unsupported symbols.", user.id)
 
-        await save_user_parameters(context)
+        await save_user_settings(context)
 
         await update.message.reply_text(
             LANG_TEXTS[current_language]["data_error"] + " " +
@@ -605,7 +591,7 @@ async def step_size(update: Update, context: ContextTypes.DEFAULT_TYPE):
     )
     plot_graph.close()
 
-    await save_user_parameters(context)
+    await save_user_settings(context)
 
     return MENU
 
@@ -617,7 +603,7 @@ async def cancel(update: Update, context: ContextTypes.DEFAULT_TYPE):
         user = update.message.from_user
         logger.info("User %s canceled solving.", user.id)
 
-        await save_user_parameters(context)
+        await save_user_settings(context)
 
         current_language = context.user_data.get('language', DEFAULT_LANGUAGE)
 
@@ -643,11 +629,57 @@ async def cancel(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return current_state
 
 
-async def save_user_parameters(context: ContextTypes.DEFAULT_TYPE):
+async def save_user_settings(context: ContextTypes.DEFAULT_TYPE):
     keys_to_keep = ['method', 'rounding', 'language']
     for key in list(context.user_data.keys()):
         if key not in keys_to_keep:
             del context.user_data[key]
+
+
+async def save_user_settings_to_psql(user_id: int, user_settings: dict):
+    with psql.cursor() as cursor:
+        cursor.execute(
+            """
+            INSERT INTO user_settings (id, language, rounding, method)
+            VALUES (%s, %s, %s, %s)
+            ON CONFLICT (id) DO UPDATE
+            SET language = EXCLUDED.language,
+                rounding = EXCLUDED.rounding,
+                method = EXCLUDED.method;
+            """,
+            (
+                user_id,
+                user_settings.get('language', DEFAULT_LANGUAGE),
+                user_settings.get('rounding', DEFAULT_ROUNDING),
+                user_settings.get('method', DEFAULT_METHOD),
+            )
+        )
+        psql.commit()
+
+
+async def get_user_settings_from_psql(user_id: int) -> dict:
+    with psql.cursor() as cursor:
+        cursor.execute(
+            """
+            SELECT language, rounding, method
+            FROM user_settings
+            WHERE id = %s;
+            """,
+            (user_id,)
+        )
+        result = cursor.fetchone()
+        if result:
+            return {
+                'language': result[0],
+                'rounding': result[1],
+                'method': result[2]
+            }
+        else:
+            return {
+                'language': DEFAULT_LANGUAGE,
+                'rounding': DEFAULT_ROUNDING,
+                'method': DEFAULT_METHOD
+            }
 
 
 def main() -> None:
@@ -658,6 +690,7 @@ def main() -> None:
         states={
             MENU:
             [CallbackQueryHandler(solve, pattern="^solve$"),
+             CallbackQueryHandler(solve_history, pattern="^solve_history$"),
              CallbackQueryHandler(start, pattern="^back$"),
              CallbackQueryHandler(start, pattern="^menu$"),
              CallbackQueryHandler(settings, pattern="^settings$"),
@@ -668,8 +701,7 @@ def main() -> None:
              CallbackQueryHandler(
                  method, pattern="^method_(euler|modified_euler|runge_kutta|dormand_prince)$"),
              CallbackQueryHandler(rounding, pattern="^(4|6|8|16)$"),
-             CallbackQueryHandler(language, pattern="^(en|ru)$"),
-             CallbackQueryHandler(solve_history, pattern="^solve_history$")],
+             CallbackQueryHandler(language, pattern="^(en|ru)$")],
             EQUATION:
             [MessageHandler(filters.TEXT & ~filters.COMMAND, equation)],
             INITIAL_X:
