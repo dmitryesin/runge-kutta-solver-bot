@@ -640,7 +640,7 @@ async def save_user_settings_to_psql(user_id: int, user_settings: dict):
     with psql.cursor() as cursor:
         cursor.execute(
             """
-            INSERT INTO user_settings (id, language, rounding, method)
+            INSERT INTO users (id, language, rounding, method)
             VALUES (%s, %s, %s, %s)
             ON CONFLICT (id) DO UPDATE
             SET language = EXCLUDED.language,
@@ -662,7 +662,7 @@ async def get_user_settings_from_psql(user_id: int) -> dict:
         cursor.execute(
             """
             SELECT language, rounding, method
-            FROM user_settings
+            FROM users
             WHERE id = %s;
             """,
             (user_id,)
