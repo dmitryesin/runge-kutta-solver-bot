@@ -36,7 +36,7 @@ try:
         port="5432"
     )
 except psycopg2.OperationalError:
-    logger.error("Failed to connect to PostgreSQL.")
+    logger.error("Failed to connect to database.")
     psql = None
 
 PY_DIR = "solver-bot/src/main/python/"
@@ -642,7 +642,7 @@ async def save_user_settings(context: ContextTypes.DEFAULT_TYPE):
 
 async def save_user_settings_to_psql(user_id: int, user_settings: dict):
     if psql is None:
-        logger.warning("PostgreSQL connection is not available. Skipping save operation.")
+        logger.warning("Database connection is not available. Skipping save operation.")
         return
 
     try:
@@ -665,12 +665,12 @@ async def save_user_settings_to_psql(user_id: int, user_settings: dict):
             )
             psql.commit()
     except psycopg2.Error:
-        logger.error("Failed to save user settings to PostgreSQL.")
+        logger.error("Failed to save user settings to database.")
 
 
 async def get_user_settings_from_psql(user_id: int) -> dict:
     if psql is None:
-        logger.warning("PostgreSQL connection is not available. Returning default user settings.")
+        logger.warning("Database connection is not available. Returning default user settings.")
         return {
             'language': DEFAULT_LANGUAGE,
             'rounding': DEFAULT_ROUNDING,
@@ -695,7 +695,7 @@ async def get_user_settings_from_psql(user_id: int) -> dict:
                     'method': result[2]
                 }
     except psycopg2.Error:
-        logger.error("Failed to fetch user settings from PostgreSQL.")
+        logger.error("Failed to fetch user settings from database.")
 
     return {
         'language': DEFAULT_LANGUAGE,
