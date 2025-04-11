@@ -1,6 +1,8 @@
 import json
-import psycopg2
 
+from database.db_utils import (
+    get_user_settings_from_psql,
+    save_user_settings_to_psql)
 from logger import logger
 from plotting.plotter import plot_solution
 from solution import (
@@ -26,18 +28,6 @@ from telegram.ext import (
     MessageHandler,
     filters
 )
-
-try:
-    psql = psycopg2.connect(
-        dbname="postgres",
-        user="postgres",
-        password="postgres",
-        host="localhost",
-        port="5432"
-    )
-except psycopg2.OperationalError:
-    logger.error("Failed to connect to database.")
-    psql = None
 
 PY_DIR = "solver-bot/src/main/python/"
 
@@ -638,70 +628,6 @@ async def save_user_settings(context: ContextTypes.DEFAULT_TYPE):
     for key in list(context.user_data.keys()):
         if key not in keys_to_keep:
             del context.user_data[key]
-
-
-async def save_user_settings_to_psql(user_id: int, user_settings: dict):
-    if psql is None:
-        logger.warning("Database connection is not available. Skipping save operation.")
-        return
-
-    try:
-        with psql.cursor() as cursor:
-            cursor.execute(
-                """
-                INSERT INTO users (id, language, rounding, method)
-                VALUES (%s, %s, %s, %s)
-                ON CONFLICT (id) DO UPDATE
-                SET language = EXCLUDED.language,
-                    rounding = EXCLUDED.rounding,
-                    method = EXCLUDED.method;
-                """,
-                (
-                    user_id,
-                    user_settings.get('language', DEFAULT_LANGUAGE),
-                    user_settings.get('rounding', DEFAULT_ROUNDING),
-                    user_settings.get('method', DEFAULT_METHOD),
-                )
-            )
-            psql.commit()
-    except psycopg2.Error:
-        logger.error("Failed to save user settings to database.")
-
-
-async def get_user_settings_from_psql(user_id: int) -> dict:
-    if psql is None:
-        logger.warning("Database connection is not available. Returning default user settings.")
-        return {
-            'language': DEFAULT_LANGUAGE,
-            'rounding': DEFAULT_ROUNDING,
-            'method': DEFAULT_METHOD
-        }
-
-    try:
-        with psql.cursor() as cursor:
-            cursor.execute(
-                """
-                SELECT language, rounding, method
-                FROM users
-                WHERE id = %s;
-                """,
-                (user_id,)
-            )
-            result = cursor.fetchone()
-            if result:
-                return {
-                    'language': result[0],
-                    'rounding': result[1],
-                    'method': result[2]
-                }
-    except psycopg2.Error:
-        logger.error("Failed to fetch user settings from database.")
-
-    return {
-        'language': DEFAULT_LANGUAGE,
-        'rounding': DEFAULT_ROUNDING,
-        'method': DEFAULT_METHOD
-    }
 
 
 def main() -> None:
