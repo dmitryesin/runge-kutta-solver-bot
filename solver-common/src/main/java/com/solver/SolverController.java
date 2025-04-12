@@ -3,8 +3,6 @@ package com.solver;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
@@ -23,8 +21,10 @@ public class SolverController {
         return CompletableFuture.supplyAsync(() -> {
             int applicationId = -1;
             try {
+                Integer userId = request.getUserId();
+
                 applicationId = dbService.createApplication(
-                    null,
+                    userId,
                     request.toJson(),
                     "new"
                 ).join();
@@ -62,15 +62,23 @@ public class SolverController {
     }
 
     @GetMapping("/solution/{applicationId}")
-    public CompletableFuture<SolutionResponse> getSolutionByApplicationId(@PathVariable("applicationId") int applicationId) {
-        return dbService.getResultsByApplicationId(applicationId)
-                .thenApply(optionalJson -> optionalJson.map(json -> {
-                    try {
-                        ObjectMapper objectMapper = new ObjectMapper();
-                        return objectMapper.readValue(json, SolutionResponse.class);
-                    } catch (Exception e) {
-                        throw new RuntimeException("Error parsing solution JSON", e);
-                    }
-                }).orElseThrow(() -> new RuntimeException("Solution not found for applicationId: " + applicationId)));
+    public CompletableFuture<double[]> getSolutionByApplicationId(@PathVariable("applicationId") int applicationId) {
+        return dbService.getSolutionByApplicationId(applicationId)
+                .thenApply(optionalSolution -> optionalSolution.orElseThrow(() -> 
+                    new RuntimeException("Solution not found for applicationId: " + applicationId)));
+    }
+
+    @GetMapping("/x-values/{applicationId}")
+    public CompletableFuture<List<Double>> getXValuesByApplicationId(@PathVariable("applicationId") int applicationId) {
+        return dbService.getXValuesByApplicationId(applicationId)
+                .thenApply(optionalXValues -> optionalXValues.orElseThrow(() -> 
+                    new RuntimeException("xValues not found for applicationId: " + applicationId)));
+    }
+
+    @GetMapping("/y-values/{applicationId}")
+    public CompletableFuture<List<double[]>> getYValuesByApplicationId(@PathVariable("applicationId") int applicationId) {
+        return dbService.getYValuesByApplicationId(applicationId)
+                .thenApply(optionalYValues -> optionalYValues.orElseThrow(() -> 
+                    new RuntimeException("yValues not found for applicationId: " + applicationId)));
     }
 }
