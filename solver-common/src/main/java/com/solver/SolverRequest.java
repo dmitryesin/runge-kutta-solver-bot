@@ -1,5 +1,8 @@
 package com.solver;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 public class SolverRequest {
     private int method;
     private int order;
@@ -29,4 +32,13 @@ public class SolverRequest {
 
     public double getStepSize() { return stepSize; }
     public void setStepSize(double stepSize) { this.stepSize = stepSize; }
+
+    public String toJson() {
+        ObjectMapper objectMapper = new ObjectMapper();
+        try {
+            return objectMapper.writeValueAsString(this);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException("Error converting SolverRequest to JSON", e);
+        }
+    }
 }
