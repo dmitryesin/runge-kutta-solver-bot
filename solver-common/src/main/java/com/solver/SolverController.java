@@ -79,6 +79,13 @@ public class SolverController {
                     new RuntimeException("User settings not found for userId: " + userId)));
     }
 
+    @GetMapping("/application/{applicationId}")
+    public CompletableFuture<String> getApplicationById(@PathVariable("applicationId") int applicationId) {
+        return dbService.getApplicationById(applicationId)
+                .thenApply(optionalApplication -> optionalApplication.orElseThrow(() -> 
+                    new RuntimeException("Application not found for applicationId: " + applicationId)));
+    }
+
     @GetMapping("/solution/{applicationId}")
     public CompletableFuture<double[]> getSolutionByApplicationId(@PathVariable("applicationId") int applicationId) {
         return dbService.getSolutionByApplicationId(applicationId)
