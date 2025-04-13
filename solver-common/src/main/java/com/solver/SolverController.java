@@ -86,6 +86,13 @@ public class SolverController {
                     new RuntimeException("Application not found for applicationId: " + applicationId)));
     }
 
+    @GetMapping("/application/{applicationId}/status")
+    public CompletableFuture<String> getApplicationStatusByApplicationId(@PathVariable("applicationId") int applicationId) {
+        return dbService.getApplicationStatusByApplicationId(applicationId)
+                .thenApply(optionalStatus -> optionalStatus.orElseThrow(() -> 
+                    new RuntimeException("Application status not found for applicationId: " + applicationId)));
+    }
+
     @GetMapping("/solution/{applicationId}")
     public CompletableFuture<double[]> getSolutionByApplicationId(@PathVariable("applicationId") int applicationId) {
         return dbService.getSolutionByApplicationId(applicationId)

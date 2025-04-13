@@ -170,6 +170,25 @@ public class DBService {
     }
 
     @Async
+    public CompletableFuture<Optional<String>> getApplicationStatusByApplicationId(int applicationId) {
+        return CompletableFuture.supplyAsync(() -> {
+            String query = "SELECT status FROM applications WHERE id = ?";
+            try (Connection conn = DBConnection.getConnection();
+                 PreparedStatement stmt = conn.prepareStatement(query)) {
+                stmt.setInt(1, applicationId);
+                ResultSet rs = stmt.executeQuery();
+                if (rs.next()) {
+                    return Optional.of(rs.getString("status"));
+                } else {
+                    return Optional.empty();
+                }
+            } catch (SQLException e) {
+                throw new RuntimeException(e);
+            }
+        });
+    }
+
+    @Async
     public CompletableFuture<Void> updateApplicationStatus(int applicationId, String status) {
         return CompletableFuture.runAsync(() -> {
             String query = "UPDATE applications SET status = ?, last_updated_at = NOW() WHERE id = ?";
