@@ -16,6 +16,17 @@ public class SolverController {
     @Autowired
     private DBService dbService;
 
+    @PostMapping("/user-settings/{userId}")
+    public CompletableFuture<String> setUserSettingsById(
+            @PathVariable("userId") Integer userId,
+            @RequestParam("language") String language,
+            @RequestParam("rounding") String rounding,
+            @RequestParam("method") String method) {
+        return dbService.setUserSettingsById(userId, language, rounding, method)
+                .thenApply(optionalResult -> optionalResult.orElseThrow(() -> 
+                    new RuntimeException("Failed to update settings for userId: " + userId)));
+    }
+
     @PostMapping("/solve")
     public CompletableFuture<SolutionResponse> solve(@RequestBody SolverRequest request) {
         return CompletableFuture.supplyAsync(() -> {
@@ -59,6 +70,13 @@ public class SolverController {
                 throw new RuntimeException("Error solving the problem", e);
             }
         });
+    }
+
+    @GetMapping("/user-settings/{userId}")
+    public CompletableFuture<String> getUserSettingsById(@PathVariable("userId") Integer userId) {
+        return dbService.getUserSettingsById(userId)
+                .thenApply(optionalSettings -> optionalSettings.orElseThrow(() -> 
+                    new RuntimeException("User settings not found for userId: " + userId)));
     }
 
     @GetMapping("/solution/{applicationId}")

@@ -15,6 +15,56 @@ import java.util.concurrent.CompletableFuture;
 public class DBService {
 
     @Async
+    public CompletableFuture<Optional<String>> getUserSettingsById(Integer userId) {
+        return CompletableFuture.supplyAsync(() -> {
+            String query = "SELECT language, rounding, method FROM users WHERE id = ?";
+            try (Connection conn = DBConnection.getConnection();
+                 PreparedStatement stmt = conn.prepareStatement(query)) {
+                stmt.setInt(1, userId);
+                ResultSet rs = stmt.executeQuery();
+                if (rs.next()) {
+                    String language = rs.getString("language");
+                    String rounding = rs.getString("rounding");
+                    String method = rs.getString("method");
+                    return Optional.of(
+                        String.format(
+                            "{\"language\": \"%s\", \"rounding\": \"%s\", \"method\": \"%s\"}",
+                            language,
+                            rounding,
+                            method));
+                } else {
+                    return Optional.empty();
+                }
+            } catch (SQLException e) {
+                throw new RuntimeException(e);
+            }
+        });
+    }
+
+    @Async
+    public CompletableFuture<Optional<String>> setUserSettingsById(Integer userId, String language, String rounding, String method) {
+        return CompletableFuture.supplyAsync(() -> {
+            String query = "INSERT INTO users (id, language, rounding, method) " +
+                           "VALUES (?, ?, ?, ?) " +
+                           "ON CONFLICT (id) DO UPDATE " +
+                           "SET language = EXCLUDED.language, " +
+                           "    rounding = EXCLUDED.rounding, " +
+                           "    method = EXCLUDED.method";
+            try (Connection conn = DBConnection.getConnection();
+                 PreparedStatement stmt = conn.prepareStatement(query)) {
+                stmt.setInt(1, userId);
+                stmt.setString(2, language);
+                stmt.setString(3, rounding);
+                stmt.setString(4, method);
+                int rowsAffected = stmt.executeUpdate();
+                return rowsAffected > 0 ? Optional.of("Settings saved successfully") : Optional.empty();
+            } catch (SQLException e) {
+                throw new RuntimeException(e);
+            }
+        });
+    }
+
+    @Async
     public CompletableFuture<Integer> createApplication(Integer userId, String parameters, String status) {
         return CompletableFuture.supplyAsync(() -> {
             String query = "INSERT INTO applications (user_id, parameters, status) VALUES (?, ?::jsonb, ?) RETURNING id";

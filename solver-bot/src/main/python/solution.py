@@ -10,7 +10,8 @@ JAVA_SERVER_URL = "http://localhost:8080/api/solver"
 
 
 async def get_solution(context: ContextTypes.DEFAULT_TYPE):
-    (method,
+    (user_id,
+     method,
      order,
      equation,
      initial_x,
@@ -19,7 +20,8 @@ async def get_solution(context: ContextTypes.DEFAULT_TYPE):
      step_size) = await extract_user_data(context)
 
     try:
-        set_java_parameters(method,
+        set_java_parameters(user_id,
+                            method,
                             order,
                             equation,
                             initial_x,
@@ -40,6 +42,7 @@ async def extract_user_data(context: ContextTypes.DEFAULT_TYPE):
     data = context.user_data
 
     return (
+        data['user_id'],
         data['method'],
         data['order'],
         data['equation'],
@@ -50,7 +53,7 @@ async def extract_user_data(context: ContextTypes.DEFAULT_TYPE):
     )
 
 
-def set_java_parameters(method, order, equation, initial_x, initial_y, reach_point, step_size):
+def set_java_parameters(user_id, method, order, equation, initial_x, initial_y, reach_point, step_size):
     method_mapping = {
         "method_euler": 1,
         "method_modified_euler": 2,
@@ -59,6 +62,7 @@ def set_java_parameters(method, order, equation, initial_x, initial_y, reach_poi
     }
 
     payload = {
+        "userId": user_id,
         "method": method_mapping.get(method, 1),
         "order": int(order),
         "equation": replace_math_functions(equation),
@@ -72,6 +76,27 @@ def set_java_parameters(method, order, equation, initial_x, initial_y, reach_poi
                              json=payload,
                              timeout=10)
     response.raise_for_status()
+
+
+def set_user_settings(user_id, language, rounding, method):
+    payload = {
+        "language": language,
+        "rounding": rounding,
+        "method": method
+    }
+
+    response = requests.post(f"{JAVA_SERVER_URL}/user-settings/{user_id}",
+                             params=payload,
+                             timeout=10)
+    response.raise_for_status()
+    return response.text
+
+
+def get_user_settings(user_id):
+    response = requests.get(f"{JAVA_SERVER_URL}/user-settings/{user_id}",
+                            timeout=10)
+    response.raise_for_status()
+    return response.json()
 
 
 def get_x_values():

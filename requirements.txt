@@ -1,7 +1,5 @@
 matplotlib==3.10.1
 numpy==2.2.4
-psycopg2==2.9.10
-psycopg2-binary==2.9.10
 python-telegram-bot==22.0
 requests==2.32.3
 sympy==1.13.3

@@ -1,11 +1,10 @@
 import json
 
-from database.db_utils import (
-    get_user_settings_from_psql,
-    save_user_settings_to_psql)
 from logger import logger
 from plotting.plotter import plot_solution
 from solution import (
+    set_user_settings,
+    get_user_settings,
     get_result_info,
     get_x_values,
     get_y_values,
@@ -48,12 +47,17 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.edited_message:
         return MENU
 
-    user_settings = await get_user_settings_from_psql(update.effective_user.id)
+    user_settings = get_user_settings(update.effective_user.id)
     context.user_data['method'] = user_settings.get('method', DEFAULT_METHOD)
     context.user_data['rounding'] = user_settings.get('rounding', DEFAULT_ROUNDING)
     context.user_data['language'] = user_settings.get('language', DEFAULT_LANGUAGE)
 
-    await save_user_settings_to_psql(update.effective_user.id, context.user_data)
+    set_user_settings(
+        update.effective_user.id,
+        context.user_data['language'],
+        context.user_data['rounding'],
+        context.user_data['method']
+    )
 
     current_state = context.user_data.get("state", None)
     current_language = context.user_data.get('language', DEFAULT_LANGUAGE)
@@ -147,7 +151,12 @@ async def method(update: Update, context: ContextTypes.DEFAULT_TYPE):
     current_method = query.data
     context.user_data['method'] = current_method
 
-    await save_user_settings_to_psql(update.effective_user.id, context.user_data)
+    set_user_settings(
+        update.effective_user.id,
+        context.user_data['language'],
+        context.user_data['rounding'],
+        context.user_data['method']
+    )
 
     await settings_method(update, context)
 
@@ -208,7 +217,12 @@ async def rounding(update: Update, context: ContextTypes.DEFAULT_TYPE):
     current_rounding = query.data
     context.user_data['rounding'] = current_rounding
 
-    await save_user_settings_to_psql(update.effective_user.id, context.user_data)
+    set_user_settings(
+        update.effective_user.id,
+        context.user_data['language'],
+        context.user_data['rounding'],
+        context.user_data['method']
+    )
 
     await settings_rounding(update, context)
 
@@ -265,7 +279,12 @@ async def language(update: Update, context: ContextTypes.DEFAULT_TYPE):
     current_language = query.data
     context.user_data['language'] = current_language
 
-    await save_user_settings_to_psql(update.effective_user.id, context.user_data)
+    set_user_settings(
+        update.effective_user.id,
+        context.user_data['language'],
+        context.user_data['rounding'],
+        context.user_data['method']
+    )
 
     await settings_language(update, context)
 
