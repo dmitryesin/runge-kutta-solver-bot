@@ -42,7 +42,7 @@ async def extract_user_data(context: ContextTypes.DEFAULT_TYPE):
     data = context.user_data
 
     return (
-        data['user_id'],
+        context._user_id,
         data['method'],
         data['order'],
         data['equation'],
