@@ -98,6 +98,31 @@ public class DBService {
     }
 
     @Async
+    public CompletableFuture<Integer> createApplicationWithUserId(String parameters, String status, Integer userId) {
+        return CompletableFuture.supplyAsync(() -> {
+            String query = """
+                INSERT INTO applications (user_id, parameters, status)
+                VALUES (?, ?::jsonb, ?)
+                RETURNING id
+                """;
+            try (Connection conn = DBConnection.getConnection();
+                 PreparedStatement stmt = conn.prepareStatement(query)) {
+                stmt.setInt(1, userId);
+                stmt.setString(2, parameters);
+                stmt.setString(3, status);
+                ResultSet rs = stmt.executeQuery();
+                if (rs.next()) {
+                    return rs.getInt(1);
+                } else {
+                    throw new SQLException("Failed to create application");
+                }
+            } catch (SQLException e) {
+                throw new RuntimeException(e);
+            }
+        });
+    }
+
+    @Async
     public CompletableFuture<Optional<String>> getApplicationById(int applicationId) {
         return CompletableFuture.supplyAsync(() -> {
             String query = """

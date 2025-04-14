@@ -70,6 +70,51 @@ public class SolverController {
         });
     }
 
+    @PostMapping("/solve/{userId}")
+    public CompletableFuture<Integer> solveWithUserId(
+            @PathVariable("userId") Integer userId,
+            @RequestBody SolverRequest request) {
+        return CompletableFuture.supplyAsync(() -> {
+            int applicationId = -1;
+            try {
+                applicationId = dbService.createApplicationWithUserId(
+                    request.toJson(),
+                    "new", 
+                    userId
+                ).join();
+
+                dbService.updateApplicationStatus(applicationId, "in_progress");
+
+                main.setMethod(request.getMethod());
+                main.setOrder(request.getOrder());
+                main.setEquation(request.getEquation());
+                main.setInitialX(request.getInitialX());
+                main.setInitialY(request.getInitialY());
+                main.setReachPoint(request.getReachPoint());
+                main.setStepSize(request.getStepSize());
+
+                double[] solution = main.getSolution();
+                List<Double> xValues = main.getXValues();
+                List<double[]> yValues = main.getYValues();
+
+                dbService.saveResults(applicationId, new SolutionResponse(solution, xValues, yValues).toJson());
+
+                dbService.updateApplicationStatus(applicationId, "completed");
+
+                return applicationId;
+            } catch (Exception e) {
+                if (applicationId != -1) {
+                    try {
+                        dbService.updateApplicationStatus(applicationId, "error");
+                    } catch (Exception sqlException) {
+                        sqlException.printStackTrace();
+                    }
+                }
+                throw new RuntimeException("Error solving the problem", e);
+            }
+        });
+    }
+
     @GetMapping("/user-settings/{userId}")
     public CompletableFuture<String> getUserSettingsById(@PathVariable("userId") Integer userId) {
         return dbService.getUserSettingsById(userId)
