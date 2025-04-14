@@ -2,58 +2,11 @@ import numpy as np
 import requests
 
 from equation.function_replacer import replace_math_functions
-from telegram.ext import (
-    ContextTypes
-)
 
 JAVA_SERVER_URL = "http://localhost:8080/api/solver"
 
 
-async def get_solution(context: ContextTypes.DEFAULT_TYPE):
-    (user_id,
-     method,
-     order,
-     equation,
-     initial_x,
-     initial_y,
-     reach_point,
-     step_size) = await extract_user_data(context)
-
-    try:
-        set_java_parameters(user_id,
-                            method,
-                            order,
-                            equation,
-                            initial_x,
-                            initial_y,
-                            reach_point,
-                            step_size)
-        response = requests.get(f"{JAVA_SERVER_URL}/solution",
-                                timeout=10)
-        response.raise_for_status()
-        result = response.json()
-    except (ValueError, requests.RequestException):
-        return None
-
-    return result
-
-
-async def extract_user_data(context: ContextTypes.DEFAULT_TYPE):
-    data = context.user_data
-
-    return (
-        context._user_id,
-        data['method'],
-        data['order'],
-        data['equation'],
-        data['initial_x'],
-        data['initial_y'],
-        data['reach_point'],
-        data['step_size']
-    )
-
-
-def set_java_parameters(user_id, method, order, equation, initial_x, initial_y, reach_point, step_size):
+def set_java_parameters(method, order, equation, initial_x, initial_y, reach_point, step_size):
     method_mapping = {
         "method_euler": 1,
         "method_modified_euler": 2,
@@ -62,7 +15,6 @@ def set_java_parameters(user_id, method, order, equation, initial_x, initial_y, 
     }
 
     payload = {
-        "userId": user_id,
         "method": method_mapping.get(method, 1),
         "order": int(order),
         "equation": replace_math_functions(equation),
@@ -99,15 +51,43 @@ def get_user_settings(user_id):
     return response.json()
 
 
-def get_x_values():
-    response = requests.get(f"{JAVA_SERVER_URL}/x-values",
+def get_application_status(application_id):
+    response = requests.get(f"{JAVA_SERVER_URL}/application/{application_id}/status",
+                            timeout=10)
+    response.raise_for_status()
+    return response.json()
+
+
+def get_application_creation_date(application_id):
+    response = requests.get(f"{JAVA_SERVER_URL}/application/{application_id}/creation_date",
+                            timeout=10)
+    response.raise_for_status()
+    return response.json()
+
+
+def get_application_list(user_id):
+    response = requests.get(f"{JAVA_SERVER_URL}/application/list/{user_id}",
+                            timeout=10)
+    response.raise_for_status()
+    return response.json()
+
+
+def get_solution(application_id):
+    response = requests.get(f"{JAVA_SERVER_URL}/solution/{application_id}",
                             timeout=10)
     response.raise_for_status()
     return np.array(response.json())
 
 
-def get_y_values():
-    response = requests.get(f"{JAVA_SERVER_URL}/y-values",
+def get_x_values(application_id):
+    response = requests.get(f"{JAVA_SERVER_URL}/x-values/{application_id}",
+                            timeout=10)
+    response.raise_for_status()
+    return np.array(response.json())
+
+
+def get_y_values(application_id):
+    response = requests.get(f"{JAVA_SERVER_URL}/y-values/{application_id}",
                             timeout=10)
     response.raise_for_status()
     return np.array(response.json())
