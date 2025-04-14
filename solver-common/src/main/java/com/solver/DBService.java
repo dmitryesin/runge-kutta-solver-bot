@@ -10,6 +10,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+import java.util.HashMap;
+import java.util.Map;
 
 @Service
 public class DBService {
@@ -17,7 +19,11 @@ public class DBService {
     @Async
     public CompletableFuture<Optional<String>> getUserSettingsById(Integer userId) {
         return CompletableFuture.supplyAsync(() -> {
-            String query = "SELECT language, rounding, method FROM users WHERE id = ?";
+            String query = """
+                SELECT language, rounding, method
+                FROM users
+                WHERE id = ?
+                """;
             try (Connection conn = DBConnection.getConnection();
                  PreparedStatement stmt = conn.prepareStatement(query)) {
                 stmt.setInt(1, userId);
@@ -44,12 +50,14 @@ public class DBService {
     @Async
     public CompletableFuture<Optional<String>> setUserSettingsById(Integer userId, String language, String rounding, String method) {
         return CompletableFuture.supplyAsync(() -> {
-            String query = "INSERT INTO users (id, language, rounding, method) " +
-                           "VALUES (?, ?, ?, ?) " +
-                           "ON CONFLICT (id) DO UPDATE " +
-                           "SET language = EXCLUDED.language, " +
-                           "    rounding = EXCLUDED.rounding, " +
-                           "    method = EXCLUDED.method";
+            String query = """
+                INSERT INTO users (id, language, rounding, method)
+                VALUES (?, ?, ?, ?)
+                ON CONFLICT (id) DO UPDATE
+                SET language = EXCLUDED.language,
+                    rounding = EXCLUDED.rounding,
+                    method = EXCLUDED.method
+                """;
             try (Connection conn = DBConnection.getConnection();
                  PreparedStatement stmt = conn.prepareStatement(query)) {
                 stmt.setInt(1, userId);
@@ -67,7 +75,11 @@ public class DBService {
     @Async
     public CompletableFuture<Integer> createApplication(String parameters, String status) {
         return CompletableFuture.supplyAsync(() -> {
-            String query = "INSERT INTO applications (user_id, parameters, status) VALUES (?, ?::jsonb, ?) RETURNING id";
+            String query = """
+                INSERT INTO applications (user_id, parameters, status)
+                VALUES (?, ?::jsonb, ?)
+                RETURNING id
+                """;
             try (Connection conn = DBConnection.getConnection();
                  PreparedStatement stmt = conn.prepareStatement(query)) {
                 stmt.setNull(1, java.sql.Types.INTEGER);
@@ -88,7 +100,11 @@ public class DBService {
     @Async
     public CompletableFuture<Optional<String>> getApplicationById(int applicationId) {
         return CompletableFuture.supplyAsync(() -> {
-            String query = "SELECT parameters FROM applications WHERE id = ?";
+            String query = """
+                SELECT parameters
+                FROM applications
+                WHERE id = ?
+                """;
             try (Connection conn = DBConnection.getConnection();
                  PreparedStatement stmt = conn.prepareStatement(query)) {
                 stmt.setInt(1, applicationId);
@@ -107,7 +123,11 @@ public class DBService {
     @Async
     public CompletableFuture<Optional<List<Double>>> getXValuesByApplicationId(int applicationId) {
         return CompletableFuture.supplyAsync(() -> {
-            String query = "SELECT jsonb_array_elements_text(data->'xvalues')::double precision AS x_value FROM results WHERE application_id = ?";
+            String query = """
+                SELECT jsonb_array_elements_text(data->'xvalues')::double precision AS x_value
+                FROM results
+                WHERE application_id = ?
+                """;
             try (Connection conn = DBConnection.getConnection();
                  PreparedStatement stmt = conn.prepareStatement(query)) {
                 stmt.setInt(1, applicationId);
@@ -126,7 +146,11 @@ public class DBService {
     @Async
     public CompletableFuture<Optional<List<double[]>>> getYValuesByApplicationId(int applicationId) {
         return CompletableFuture.supplyAsync(() -> {
-            String query = "SELECT jsonb_array_elements(data->'yvalues')::jsonb AS y_value FROM results WHERE application_id = ?";
+            String query = """
+                SELECT jsonb_array_elements(data->'yvalues')::jsonb AS y_value
+                FROM results
+                WHERE application_id = ?
+                """;
             try (Connection conn = DBConnection.getConnection();
                  PreparedStatement stmt = conn.prepareStatement(query)) {
                 stmt.setInt(1, applicationId);
@@ -147,7 +171,11 @@ public class DBService {
     @Async
     public CompletableFuture<Optional<double[]>> getSolutionByApplicationId(int applicationId) {
         return CompletableFuture.supplyAsync(() -> {
-            String query = "SELECT data->>'solution' AS solution FROM results WHERE application_id = ?";
+            String query = """
+                SELECT data->>'solution' AS solution
+                FROM results
+                WHERE application_id = ?
+                """;
             try (Connection conn = DBConnection.getConnection();
                  PreparedStatement stmt = conn.prepareStatement(query)) {
                 stmt.setInt(1, applicationId);
@@ -168,7 +196,11 @@ public class DBService {
     @Async
     public CompletableFuture<Optional<String>> getApplicationStatusByApplicationId(int applicationId) {
         return CompletableFuture.supplyAsync(() -> {
-            String query = "SELECT status FROM applications WHERE id = ?";
+            String query = """
+                SELECT status
+                FROM applications
+                WHERE id = ?
+                """;
             try (Connection conn = DBConnection.getConnection();
                  PreparedStatement stmt = conn.prepareStatement(query)) {
                 stmt.setInt(1, applicationId);
@@ -187,7 +219,11 @@ public class DBService {
     @Async
     public CompletableFuture<Optional<String>> getApplicationCreationDateByApplicationId(int applicationId) {
         return CompletableFuture.supplyAsync(() -> {
-            String query = "SELECT created_at FROM applications WHERE id = ?";
+            String query = """
+                SELECT created_at
+                FROM applications
+                WHERE id = ?
+                """;
             try (Connection conn = DBConnection.getConnection();
                 PreparedStatement stmt = conn.prepareStatement(query)) {
                 stmt.setInt(1, applicationId);
@@ -206,7 +242,11 @@ public class DBService {
     @Async
     public CompletableFuture<Void> updateApplicationStatus(int applicationId, String status) {
         return CompletableFuture.runAsync(() -> {
-            String query = "UPDATE applications SET status = ?, last_updated_at = NOW() WHERE id = ?";
+            String query = """
+                UPDATE applications
+                SET status = ?, last_updated_at = NOW()
+                WHERE id = ?
+                """;
             try (Connection conn = DBConnection.getConnection();
                  PreparedStatement stmt = conn.prepareStatement(query)) {
                 stmt.setString(1, status);
@@ -221,12 +261,45 @@ public class DBService {
     @Async
     public CompletableFuture<Void> saveResults(int applicationId, String results) {
         return CompletableFuture.runAsync(() -> {
-            String query = "INSERT INTO results (application_id, data) VALUES (?, ?::jsonb)";
+            String query = """
+                INSERT INTO results (application_id, data)
+                VALUES (?, ?::jsonb)
+                """;
             try (Connection conn = DBConnection.getConnection();
                  PreparedStatement stmt = conn.prepareStatement(query)) {
                 stmt.setInt(1, applicationId);
                 stmt.setString(2, results);
                 stmt.executeUpdate();
+            } catch (SQLException e) {
+                throw new RuntimeException(e);
+            }
+        });
+    }
+
+    @Async
+    public CompletableFuture<List<Map<String, Object>>> getApplicationsByUserId(Integer userId) {
+        return CompletableFuture.supplyAsync(() -> {
+            String query = """
+                SELECT id, parameters, status, created_at, last_updated_at
+                FROM applications
+                WHERE user_id = ?
+                ORDER BY created_at DESC
+                """;
+            try (Connection conn = DBConnection.getConnection();
+                 PreparedStatement stmt = conn.prepareStatement(query)) {
+                stmt.setInt(1, userId);
+                ResultSet rs = stmt.executeQuery();
+                List<Map<String, Object>> applications = new ArrayList<>();
+                while (rs.next()) {
+                    Map<String, Object> application = new HashMap<>();
+                    application.put("id", rs.getInt("id"));
+                    application.put("parameters", rs.getString("parameters"));
+                    application.put("status", rs.getString("status"));
+                    application.put("created_at", rs.getString("created_at"));
+                    application.put("last_updated_at", rs.getString("last_updated_at"));
+                    applications.add(application);
+                }
+                return applications;
             } catch (SQLException e) {
                 throw new RuntimeException(e);
             }

@@ -5,6 +5,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/solver")
@@ -95,6 +96,17 @@ public class SolverController {
         return dbService.getApplicationCreationDateByApplicationId(applicationId)
                 .thenApply(optionalDate -> optionalDate.orElseThrow(() -> 
                     new RuntimeException("Creation date not found for applicationId: " + applicationId)));
+    }
+
+    @GetMapping("/application/list/{userId}")
+    public CompletableFuture<List<Map<String, Object>>> getApplicationsByUserId(@PathVariable("userId") Integer userId) {
+        return dbService.getApplicationsByUserId(userId)
+                .thenApply(applications -> {
+                    if (applications.isEmpty()) {
+                        throw new RuntimeException("Applications not found for userId: " + userId);
+                    }
+                    return applications;
+                });
     }
 
     @GetMapping("/solution/{applicationId}")
