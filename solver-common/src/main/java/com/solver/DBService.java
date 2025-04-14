@@ -65,16 +65,12 @@ public class DBService {
     }
 
     @Async
-    public CompletableFuture<Integer> createApplication(Integer userId, String parameters, String status) {
+    public CompletableFuture<Integer> createApplication(String parameters, String status) {
         return CompletableFuture.supplyAsync(() -> {
             String query = "INSERT INTO applications (user_id, parameters, status) VALUES (?, ?::jsonb, ?) RETURNING id";
             try (Connection conn = DBConnection.getConnection();
                  PreparedStatement stmt = conn.prepareStatement(query)) {
-                if (userId != null) {
-                    stmt.setInt(1, userId);
-                } else {
-                    stmt.setNull(1, java.sql.Types.INTEGER);
-                }
+                stmt.setNull(1, java.sql.Types.INTEGER);
                 stmt.setString(2, parameters);
                 stmt.setString(3, status);
                 ResultSet rs = stmt.executeQuery();
@@ -179,6 +175,25 @@ public class DBService {
                 ResultSet rs = stmt.executeQuery();
                 if (rs.next()) {
                     return Optional.of(rs.getString("status"));
+                } else {
+                    return Optional.empty();
+                }
+            } catch (SQLException e) {
+                throw new RuntimeException(e);
+            }
+        });
+    }
+
+    @Async
+    public CompletableFuture<Optional<String>> getApplicationCreationDateByApplicationId(int applicationId) {
+        return CompletableFuture.supplyAsync(() -> {
+            String query = "SELECT created_at FROM applications WHERE id = ?";
+            try (Connection conn = DBConnection.getConnection();
+                PreparedStatement stmt = conn.prepareStatement(query)) {
+                stmt.setInt(1, applicationId);
+                ResultSet rs = stmt.executeQuery();
+                if (rs.next()) {
+                    return Optional.of(rs.getString("created_at"));
                 } else {
                     return Optional.empty();
                 }

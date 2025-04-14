@@ -32,10 +32,7 @@ public class SolverController {
         return CompletableFuture.supplyAsync(() -> {
             int applicationId = -1;
             try {
-                Integer userId = request.getUserId();
-
                 applicationId = dbService.createApplication(
-                    userId,
                     request.toJson(),
                     "new"
                 ).join();
@@ -91,6 +88,13 @@ public class SolverController {
         return dbService.getApplicationStatusByApplicationId(applicationId)
                 .thenApply(optionalStatus -> optionalStatus.orElseThrow(() -> 
                     new RuntimeException("Application status not found for applicationId: " + applicationId)));
+    }
+
+    @GetMapping("/application/{applicationId}/creation_date")
+    public CompletableFuture<String> getApplicationCreationDateByApplicationId(@PathVariable("applicationId") int applicationId) {
+        return dbService.getApplicationCreationDateByApplicationId(applicationId)
+                .thenApply(optionalDate -> optionalDate.orElseThrow(() -> 
+                    new RuntimeException("Creation date not found for applicationId: " + applicationId)));
     }
 
     @GetMapping("/solution/{applicationId}")
