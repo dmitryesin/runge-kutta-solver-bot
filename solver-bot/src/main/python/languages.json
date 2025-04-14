@@ -22,6 +22,8 @@
         "invalid_initial_y_count2": "Expected: ",
         "invalid_reach_point": "Invalid approximation point.",
         "invalid_step_size": "Invalid step size value.",
+        "processing": "Processing your request...",
+        "processing_error": "Error processing your request.",
         "data_error": "The entered data is incorrect.",
         "server_error": "Server error.",
         "try_again": "Please try again.",
@@ -59,6 +61,8 @@
         "invalid_initial_y_count2": "Ожидалось: ",
         "invalid_reach_point": "Некорректное значение точки аппроксимации.",
         "invalid_step_size": "Некорректное значение размера шага.",
+        "processing": "Обработка вашего запроса...",
+        "processing_error": "Ошибка при обработке вашего запроса.",
         "data_error": "Введенные данные некорректны.",
         "server_error": "Ошибка сервера.",
         "try_again": "Пожалуйста, попробуйте снова.",
@@ -70,7 +74,7 @@
         "cancel": "Действия отменены.",
         "method_euler": "Метод Эйлера",
         "method_modified_euler": "Улучшенный метод Эйлера",
-        "method_runge_kutta": "Метод Рунге-Кутты",
-        "method_dormand_prince": "Метод Дорманда-Принса"
+        "method_runge_kutta": "Метод Рунге-Кутта",
+        "method_dormand_prince": "Метод Дормана-Принса"
     }
 }
