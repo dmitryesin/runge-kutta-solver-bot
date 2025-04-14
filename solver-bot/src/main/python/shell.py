@@ -3,6 +3,7 @@ import json
 from logger import logger
 from plotting.plotter import plot_solution
 from solution import (
+    set_java_parameters,
     set_user_settings,
     get_user_settings,
     get_result_info,
@@ -562,7 +563,35 @@ async def step_size(update: Update, context: ContextTypes.DEFAULT_TYPE):
     logger.info("Step size of %s: %s", user.id, user_input)
     context.user_data['step_size'] = user_input
 
-    result = await get_solution(context)
+    try:
+        application_id = set_java_parameters(
+            method=context.user_data['method'],
+            order=context.user_data['order'],
+            equation=context.user_data['equation'],
+            initial_x=context.user_data['initial_x'],
+            initial_y=context.user_data['initial_y'],
+            reach_point=context.user_data['reach_point'],
+            step_size=context.user_data['step_size']
+        )
+    except Exception as e:
+        logger.error("Error while setting Java parameters: %s", e)
+        await update.message.reply_text(
+            LANG_TEXTS[current_language]["server_error"] + " " +
+            LANG_TEXTS[current_language]["try_again"]
+        )
+        return MENU
+
+    try:
+        result = get_solution(application_id)
+        x_values = get_x_values(application_id)
+        y_values = get_y_values(application_id)
+    except Exception as e:
+        logger.error("Error while fetching solution data: %s", e)
+        await update.message.reply_text(
+            LANG_TEXTS[current_language]["server_error"] + " " +
+            LANG_TEXTS[current_language]["try_again"]
+        )
+        return MENU
 
     keyboard = [
         [InlineKeyboardButton(
@@ -587,8 +616,8 @@ async def step_size(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
         return MENU
 
-    plot_graph = plot_solution(get_x_values(),
-                               get_y_values(),
+    plot_graph = plot_solution(x_values,
+                               y_values,
                                context.user_data['order'])
 
     print_result_info = get_result_info(result,
