@@ -1,12 +1,17 @@
 import numpy as np
-import requests
+import aiohttp
+import asyncio
+from aiohttp import ClientError, ClientTimeout
+import json
 
 from equation.function_replacer import replace_math_functions
 
 JAVA_SERVER_URL = "http://localhost:8080/api/solver"
+REQUEST_TIMEOUT = 60 
+MAX_RETRIES = 3
+RETRY_DELAY = 1
 
-
-def set_java_parameters(method, order, equation, initial_x, initial_y, reach_point, step_size):
+async def set_java_parameters(user_id, method, order, equation, initial_x, initial_y, reach_point, step_size):
     method_mapping = {
         "method_euler": 1,
         "method_modified_euler": 2,
@@ -24,73 +29,174 @@ def set_java_parameters(method, order, equation, initial_x, initial_y, reach_poi
         "stepSize": float(step_size)
     }
 
-    response = requests.post(f"{JAVA_SERVER_URL}/solve",
-                             json=payload,
-                             timeout=10)
-    response.raise_for_status()
+    for attempt in range(MAX_RETRIES):
+        try:
+            timeout = ClientTimeout(total=REQUEST_TIMEOUT)
+            async with aiohttp.ClientSession(timeout=timeout) as session:
+                async with session.post(
+                    f"{JAVA_SERVER_URL}/solve/{user_id}",
+                    json=payload
+                ) as response:
+                    response.raise_for_status()
+                    return await response.json()
+        except (ClientError, asyncio.TimeoutError) as e:
+            if attempt < MAX_RETRIES - 1:
+                await asyncio.sleep(RETRY_DELAY)
+                continue
+            raise e
 
 
-def set_user_settings(user_id, language, rounding, method):
+async def set_user_settings(user_id, language, rounding, method):
     payload = {
         "language": language,
         "rounding": rounding,
         "method": method
     }
 
-    response = requests.post(f"{JAVA_SERVER_URL}/user-settings/{user_id}",
-                             params=payload,
-                             timeout=10)
-    response.raise_for_status()
-    return response.text
+    timeout = ClientTimeout(total=REQUEST_TIMEOUT)
+    async with aiohttp.ClientSession(timeout=timeout) as session:
+        async with session.post(
+            f"{JAVA_SERVER_URL}/user-settings/{user_id}",
+            params=payload
+        ) as response:
+            response.raise_for_status()
+            return await response.text()
 
 
-def get_user_settings(user_id):
-    response = requests.get(f"{JAVA_SERVER_URL}/user-settings/{user_id}",
-                            timeout=10)
-    response.raise_for_status()
-    return response.json()
+async def get_user_settings(user_id):
+    timeout = ClientTimeout(total=REQUEST_TIMEOUT)
+    async with aiohttp.ClientSession(timeout=timeout) as session:
+        async with session.get(
+            f"{JAVA_SERVER_URL}/user-settings/{user_id}"
+        ) as response:
+            response.raise_for_status()
+            content_type = response.headers.get('Content-Type', '')
+            if 'application/json' in content_type:
+                return await response.json()
+            else:
+                text = await response.text()
+                try:
+                    return json.loads(text)
+                except json.JSONDecodeError:
+                    return text
 
 
-def get_application_status(application_id):
-    response = requests.get(f"{JAVA_SERVER_URL}/application/{application_id}/status",
-                            timeout=10)
-    response.raise_for_status()
-    return response.json()
+async def get_application_status(application_id):
+    timeout = ClientTimeout(total=REQUEST_TIMEOUT)
+    async with aiohttp.ClientSession(timeout=timeout) as session:
+        async with session.get(
+            f"{JAVA_SERVER_URL}/application/{application_id}/status"
+        ) as response:
+            response.raise_for_status()
+            return await response.text()
 
 
-def get_application_creation_date(application_id):
-    response = requests.get(f"{JAVA_SERVER_URL}/application/{application_id}/creation_date",
-                            timeout=10)
-    response.raise_for_status()
-    return response.json()
+async def get_application_creation_date(application_id):
+    timeout = ClientTimeout(total=REQUEST_TIMEOUT)
+    async with aiohttp.ClientSession(timeout=timeout) as session:
+        async with session.get(
+            f"{JAVA_SERVER_URL}/application/{application_id}/creation_date"
+        ) as response:
+            response.raise_for_status()
+            content_type = response.headers.get('Content-Type', '')
+            if 'application/json' in content_type:
+                return await response.json()
+            else:
+                text = await response.text()
+                try:
+                    return json.loads(text)
+                except json.JSONDecodeError:
+                    return text
 
 
-def get_application_list(user_id):
-    response = requests.get(f"{JAVA_SERVER_URL}/application/list/{user_id}",
-                            timeout=10)
-    response.raise_for_status()
-    return response.json()
+async def get_application_list(user_id):
+    timeout = ClientTimeout(total=REQUEST_TIMEOUT)
+    async with aiohttp.ClientSession(timeout=timeout) as session:
+        async with session.get(
+            f"{JAVA_SERVER_URL}/application/list/{user_id}"
+        ) as response:
+            response.raise_for_status()
+            content_type = response.headers.get('Content-Type', '')
+            if 'application/json' in content_type:
+                return await response.json()
+            else:
+                text = await response.text()
+                try:
+                    return json.loads(text)
+                except json.JSONDecodeError:
+                    return text
 
 
-def get_solution(application_id):
-    response = requests.get(f"{JAVA_SERVER_URL}/solution/{application_id}",
-                            timeout=10)
-    response.raise_for_status()
-    return np.array(response.json())
+async def get_solution(application_id):
+    timeout = ClientTimeout(total=REQUEST_TIMEOUT)
+    async with aiohttp.ClientSession(timeout=timeout) as session:
+        async with session.get(
+            f"{JAVA_SERVER_URL}/solution/{application_id}"
+        ) as response:
+            response.raise_for_status()
+            content_type = response.headers.get('Content-Type', '')
+            if 'application/json' in content_type:
+                data = await response.json()
+            else:
+                text = await response.text()
+                try:
+                    data = json.loads(text)
+                except json.JSONDecodeError:
+                    raise ValueError(f"Failed to parse solution data: {text}")
+            return np.array(data)
 
 
-def get_x_values(application_id):
-    response = requests.get(f"{JAVA_SERVER_URL}/x-values/{application_id}",
-                            timeout=10)
-    response.raise_for_status()
-    return np.array(response.json())
+async def get_x_values(application_id):
+    timeout = ClientTimeout(total=REQUEST_TIMEOUT)
+    async with aiohttp.ClientSession(timeout=timeout) as session:
+        async with session.get(
+            f"{JAVA_SERVER_URL}/x-values/{application_id}"
+        ) as response:
+            response.raise_for_status()
+            content_type = response.headers.get('Content-Type', '')
+            if 'application/json' in content_type:
+                data = await response.json()
+            else:
+                text = await response.text()
+                try:
+                    data = json.loads(text)
+                except json.JSONDecodeError:
+                    raise ValueError(f"Failed to parse x-values data: {text}")
+            return np.array(data)
 
 
-def get_y_values(application_id):
-    response = requests.get(f"{JAVA_SERVER_URL}/y-values/{application_id}",
-                            timeout=10)
-    response.raise_for_status()
-    return np.array(response.json())
+async def get_y_values(application_id):
+    timeout = ClientTimeout(total=REQUEST_TIMEOUT)
+    async with aiohttp.ClientSession(timeout=timeout) as session:
+        async with session.get(
+            f"{JAVA_SERVER_URL}/y-values/{application_id}"
+        ) as response:
+            response.raise_for_status()
+            content_type = response.headers.get('Content-Type', '')
+            if 'application/json' in content_type:
+                data = await response.json()
+            else:
+                text = await response.text()
+                try:
+                    data = json.loads(text)
+                except json.JSONDecodeError:
+                    raise ValueError(f"Failed to parse y-values data: {text}")
+            return np.array(data)
+
+
+async def wait_for_application_completion(application_id, max_attempts=60, delay=1):
+    for _ in range(max_attempts):
+        try:
+            status = await get_application_status(application_id)
+            if status == "completed":
+                return True
+            elif status == "error":
+                return False
+            await asyncio.sleep(delay)
+        except Exception as e:
+            await asyncio.sleep(delay)
+    
+    return False
 
 
 def get_result_info(result, order, rounding):
