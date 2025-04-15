@@ -9,7 +9,8 @@ from solution import (
     get_result_info,
     get_x_values,
     get_y_values,
-    get_solution)
+    get_solution,
+    wait_for_application_completion)
 from equation.equation_parser import format_equation
 from equation.equation_validator import (
     validate_symbols,
@@ -48,12 +49,12 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.edited_message:
         return MENU
 
-    user_settings = get_user_settings(update.effective_user.id)
+    user_settings = await get_user_settings(update.effective_user.id)
     context.user_data['method'] = user_settings.get('method', DEFAULT_METHOD)
     context.user_data['rounding'] = user_settings.get('rounding', DEFAULT_ROUNDING)
     context.user_data['language'] = user_settings.get('language', DEFAULT_LANGUAGE)
 
-    set_user_settings(
+    await set_user_settings(
         update.effective_user.id,
         context.user_data['language'],
         context.user_data['rounding'],
@@ -152,7 +153,7 @@ async def method(update: Update, context: ContextTypes.DEFAULT_TYPE):
     current_method = query.data
     context.user_data['method'] = current_method
 
-    set_user_settings(
+    await set_user_settings(
         update.effective_user.id,
         context.user_data['language'],
         context.user_data['rounding'],
@@ -218,7 +219,7 @@ async def rounding(update: Update, context: ContextTypes.DEFAULT_TYPE):
     current_rounding = query.data
     context.user_data['rounding'] = current_rounding
 
-    set_user_settings(
+    await set_user_settings(
         update.effective_user.id,
         context.user_data['language'],
         context.user_data['rounding'],
@@ -280,7 +281,7 @@ async def language(update: Update, context: ContextTypes.DEFAULT_TYPE):
     current_language = query.data
     context.user_data['language'] = current_language
 
-    set_user_settings(
+    await set_user_settings(
         update.effective_user.id,
         context.user_data['language'],
         context.user_data['rounding'],
@@ -563,36 +564,6 @@ async def step_size(update: Update, context: ContextTypes.DEFAULT_TYPE):
     logger.info("Step size of %s: %s", user.id, user_input)
     context.user_data['step_size'] = user_input
 
-    try:
-        application_id = set_java_parameters(
-            method=context.user_data['method'],
-            order=context.user_data['order'],
-            equation=context.user_data['equation'],
-            initial_x=context.user_data['initial_x'],
-            initial_y=context.user_data['initial_y'],
-            reach_point=context.user_data['reach_point'],
-            step_size=context.user_data['step_size']
-        )
-    except Exception as e:
-        logger.error("Error while setting Java parameters: %s", e)
-        await update.message.reply_text(
-            LANG_TEXTS[current_language]["server_error"] + " " +
-            LANG_TEXTS[current_language]["try_again"]
-        )
-        return MENU
-
-    try:
-        result = get_solution(application_id)
-        x_values = get_x_values(application_id)
-        y_values = get_y_values(application_id)
-    except Exception as e:
-        logger.error("Error while fetching solution data: %s", e)
-        await update.message.reply_text(
-            LANG_TEXTS[current_language]["server_error"] + " " +
-            LANG_TEXTS[current_language]["try_again"]
-        )
-        return MENU
-
     keyboard = [
         [InlineKeyboardButton(
             LANG_TEXTS[current_language]["solve_over"],
@@ -604,11 +575,68 @@ async def step_size(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     new_reply_markup = InlineKeyboardMarkup(keyboard)
 
+    try:
+        processing_message = await update.message.reply_text(
+            LANG_TEXTS[current_language]["processing"]
+        )
+        
+        try:
+            application_id = await set_java_parameters(
+                user_id=user.id,
+                method=context.user_data['method'],
+                order=context.user_data['order'],
+                equation=context.user_data['equation'],
+                initial_x=context.user_data['initial_x'],
+                initial_y=context.user_data['initial_y'],
+                reach_point=context.user_data['reach_point'],
+                step_size=context.user_data['step_size']
+            )
+        except Exception as e:
+            logger.error("Error while setting Java parameters: %s", e)
+            await save_user_settings(context)
+            await processing_message.edit_text(
+                LANG_TEXTS[current_language]["server_error"] + " " +
+                LANG_TEXTS[current_language]["try_again"],
+                reply_markup=new_reply_markup
+            )
+            return MENU
+        
+        await processing_message.edit_text(
+            LANG_TEXTS[current_language]["processing_longer"]
+        )
+        
+        is_completed = await wait_for_application_completion(application_id)
+        
+        if not is_completed:
+            logger.error("Application %s did not complete successfully", application_id)
+            await save_user_settings(context)
+            await processing_message.edit_text(
+                LANG_TEXTS[current_language]["processing_error"] + " " +
+                LANG_TEXTS[current_language]["try_again"],
+                reply_markup=new_reply_markup
+            )
+            return MENU
+            
+        result = await get_solution(application_id)
+        x_values = await get_x_values(application_id)
+        y_values = await get_y_values(application_id)
+
+        await processing_message.delete()
+
+    except Exception as e:
+        logger.error("Error while setting Java parameters: %s", e)
+        await save_user_settings(context)
+        await processing_message.delete()
+        await update.message.reply_text(
+            LANG_TEXTS[current_language]["server_error"] + " " +
+            LANG_TEXTS[current_language]["try_again"],
+            reply_markup=new_reply_markup
+        )
+        return MENU
+
     if result is None:
         logger.info("User %s used unsupported symbols.", user.id)
-
         await save_user_settings(context)
-
         await update.message.reply_text(
             LANG_TEXTS[current_language]["data_error"] + " " +
             LANG_TEXTS[current_language]["try_again"],
