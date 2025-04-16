@@ -601,10 +601,6 @@ async def step_size(update: Update, context: ContextTypes.DEFAULT_TYPE):
             )
             return MENU
         
-        await processing_message.edit_text(
-            LANG_TEXTS[current_language]["processing_longer"]
-        )
-        
         is_completed = await wait_for_application_completion(application_id)
         
         if not is_completed:
