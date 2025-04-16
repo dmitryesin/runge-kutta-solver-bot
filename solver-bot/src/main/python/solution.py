@@ -1,9 +1,8 @@
 import numpy as np
-import aiohttp
 import asyncio
-from aiohttp import ClientError, ClientTimeout
 import json
 
+from aiohttp import ClientError, ClientTimeout, ClientSession
 from equation.function_replacer import replace_math_functions
 
 JAVA_SERVER_URL = "http://localhost:8080/api/solver"
@@ -32,7 +31,7 @@ async def set_java_parameters(user_id, method, order, equation, initial_x, initi
     for attempt in range(MAX_RETRIES):
         try:
             timeout = ClientTimeout(total=REQUEST_TIMEOUT)
-            async with aiohttp.ClientSession(timeout=timeout) as session:
+            async with ClientSession(timeout=timeout) as session:
                 async with session.post(
                     f"{JAVA_SERVER_URL}/solve/{user_id}",
                     json=payload
@@ -54,7 +53,7 @@ async def set_user_settings(user_id, language, rounding, method):
     }
 
     timeout = ClientTimeout(total=REQUEST_TIMEOUT)
-    async with aiohttp.ClientSession(timeout=timeout) as session:
+    async with ClientSession(timeout=timeout) as session:
         async with session.post(
             f"{JAVA_SERVER_URL}/user-settings/{user_id}",
             params=payload
@@ -65,7 +64,7 @@ async def set_user_settings(user_id, language, rounding, method):
 
 async def get_user_settings(user_id):
     timeout = ClientTimeout(total=REQUEST_TIMEOUT)
-    async with aiohttp.ClientSession(timeout=timeout) as session:
+    async with ClientSession(timeout=timeout) as session:
         async with session.get(
             f"{JAVA_SERVER_URL}/user-settings/{user_id}"
         ) as response:
@@ -83,17 +82,25 @@ async def get_user_settings(user_id):
 
 async def get_application_status(application_id):
     timeout = ClientTimeout(total=REQUEST_TIMEOUT)
-    async with aiohttp.ClientSession(timeout=timeout) as session:
+    async with ClientSession(timeout=timeout) as session:
         async with session.get(
             f"{JAVA_SERVER_URL}/application/{application_id}/status"
         ) as response:
             response.raise_for_status()
-            return await response.text()
+            content_type = response.headers.get('Content-Type', '')
+            if 'application/json' in content_type:
+                return await response.json()
+            else:
+                text = await response.text()
+                try:
+                    return json.loads(text)
+                except json.JSONDecodeError:
+                    return text
 
 
 async def get_application_creation_date(application_id):
     timeout = ClientTimeout(total=REQUEST_TIMEOUT)
-    async with aiohttp.ClientSession(timeout=timeout) as session:
+    async with ClientSession(timeout=timeout) as session:
         async with session.get(
             f"{JAVA_SERVER_URL}/application/{application_id}/creation_date"
         ) as response:
@@ -109,27 +116,38 @@ async def get_application_creation_date(application_id):
                     return text
 
 
-async def get_application_list(user_id):
+async def get_recent_applications(user_id):
     timeout = ClientTimeout(total=REQUEST_TIMEOUT)
-    async with aiohttp.ClientSession(timeout=timeout) as session:
+    async with ClientSession(timeout=timeout) as session:
         async with session.get(
             f"{JAVA_SERVER_URL}/application/list/{user_id}"
         ) as response:
             response.raise_for_status()
             content_type = response.headers.get('Content-Type', '')
             if 'application/json' in content_type:
-                return await response.json()
+                data = await response.json()
             else:
                 text = await response.text()
                 try:
-                    return json.loads(text)
+                    data = json.loads(text)
                 except json.JSONDecodeError:
-                    return text
+                    return []
+
+            if isinstance(data, list):
+                return data[:5]
+            elif isinstance(data, dict) and 'applications' in data:
+                applications = data['applications']
+                if isinstance(applications, list):
+                    if applications and isinstance(applications[0], dict) and 'id' in applications[0]:
+                        return [app['id'] for app in applications[:5]]
+                    return applications[:5]
+
+            return []
 
 
 async def get_solution(application_id):
     timeout = ClientTimeout(total=REQUEST_TIMEOUT)
-    async with aiohttp.ClientSession(timeout=timeout) as session:
+    async with ClientSession(timeout=timeout) as session:
         async with session.get(
             f"{JAVA_SERVER_URL}/solution/{application_id}"
         ) as response:
@@ -148,7 +166,7 @@ async def get_solution(application_id):
 
 async def get_x_values(application_id):
     timeout = ClientTimeout(total=REQUEST_TIMEOUT)
-    async with aiohttp.ClientSession(timeout=timeout) as session:
+    async with ClientSession(timeout=timeout) as session:
         async with session.get(
             f"{JAVA_SERVER_URL}/x-values/{application_id}"
         ) as response:
@@ -167,7 +185,7 @@ async def get_x_values(application_id):
 
 async def get_y_values(application_id):
     timeout = ClientTimeout(total=REQUEST_TIMEOUT)
-    async with aiohttp.ClientSession(timeout=timeout) as session:
+    async with ClientSession(timeout=timeout) as session:
         async with session.get(
             f"{JAVA_SERVER_URL}/y-values/{application_id}"
         ) as response:

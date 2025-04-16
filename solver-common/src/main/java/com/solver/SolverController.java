@@ -75,7 +75,7 @@ public class SolverController {
             @PathVariable("userId") Integer userId,
             @RequestBody SolverRequest request) {
         return CompletableFuture.supplyAsync(() -> {
-            int applicationId = -1;
+            final int applicationId;
             try {
                 applicationId = dbService.createApplicationWithUserId(
                     request.toJson(),
@@ -83,34 +83,36 @@ public class SolverController {
                     userId
                 ).join();
 
-                dbService.updateApplicationStatus(applicationId, "in_progress");
+                CompletableFuture.runAsync(() -> {
+                    try {
+                        dbService.updateApplicationStatus(applicationId, "in_progress");
 
-                main.setMethod(request.getMethod());
-                main.setOrder(request.getOrder());
-                main.setEquation(request.getEquation());
-                main.setInitialX(request.getInitialX());
-                main.setInitialY(request.getInitialY());
-                main.setReachPoint(request.getReachPoint());
-                main.setStepSize(request.getStepSize());
+                        main.setMethod(request.getMethod());
+                        main.setOrder(request.getOrder());
+                        main.setEquation(request.getEquation());
+                        main.setInitialX(request.getInitialX());
+                        main.setInitialY(request.getInitialY());
+                        main.setReachPoint(request.getReachPoint());
+                        main.setStepSize(request.getStepSize());
 
-                double[] solution = main.getSolution();
-                List<Double> xValues = main.getXValues();
-                List<double[]> yValues = main.getYValues();
+                        double[] solution = main.getSolution();
+                        List<Double> xValues = main.getXValues();
+                        List<double[]> yValues = main.getYValues();
 
-                dbService.saveResults(applicationId, new SolutionResponse(solution, xValues, yValues).toJson());
-
-                dbService.updateApplicationStatus(applicationId, "completed");
+                        dbService.saveResults(applicationId, new SolutionResponse(solution, xValues, yValues).toJson());
+                        dbService.updateApplicationStatus(applicationId, "completed");
+                    } catch (Exception e) {
+                        try {
+                            dbService.updateApplicationStatus(applicationId, "error");
+                        } catch (Exception sqlException) {
+                            sqlException.printStackTrace();
+                        }
+                    }
+                });
 
                 return applicationId;
             } catch (Exception e) {
-                if (applicationId != -1) {
-                    try {
-                        dbService.updateApplicationStatus(applicationId, "error");
-                    } catch (Exception sqlException) {
-                        sqlException.printStackTrace();
-                    }
-                }
-                throw new RuntimeException("Error solving the problem", e);
+                throw new RuntimeException("Error creating application", e);
             }
         });
     }
@@ -141,6 +143,13 @@ public class SolverController {
         return dbService.getApplicationCreationDateByApplicationId(applicationId)
                 .thenApply(optionalDate -> optionalDate.orElseThrow(() -> 
                     new RuntimeException("Creation date not found for applicationId: " + applicationId)));
+    }
+
+    @GetMapping("/application/{applicationId}/update_date")
+    public CompletableFuture<String> getApplicationUpdateDateByApplicationId(@PathVariable("applicationId") int applicationId) {
+        return dbService.getApplicationUpdateDateByApplicationId(applicationId)
+                .thenApply(optionalDate -> optionalDate.orElseThrow(() -> 
+                    new RuntimeException("Update date not found for applicationId: " + applicationId)));
     }
 
     @GetMapping("/application/list/{userId}")
