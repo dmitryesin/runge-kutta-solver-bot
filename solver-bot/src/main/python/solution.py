@@ -202,17 +202,22 @@ async def get_y_values(application_id):
             return np.array(data)
 
 
-async def wait_for_application_completion(application_id, max_attempts=60, delay=1):
-    for _ in range(max_attempts):
+async def wait_for_application_completion(application_id):
+    request_limit = REQUEST_TIMEOUT
+    for _ in range(request_limit):
         try:
             status = await get_application_status(application_id)
             if status == "completed":
                 return True
+            elif status == "in_progress":
+                request_limit += 1
+                if request_limit > REQUEST_TIMEOUT * 2:
+                    return False
             elif status == "error":
                 return False
-            await asyncio.sleep(delay)
-        except Exception as e:
-            await asyncio.sleep(delay)
+            await asyncio.sleep(RETRY_DELAY)
+        except Exception:
+            await asyncio.sleep(RETRY_DELAY)
     
     return False
 
