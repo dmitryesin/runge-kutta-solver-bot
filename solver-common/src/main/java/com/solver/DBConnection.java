@@ -7,8 +7,7 @@ public class DBConnection {
     private static final Dotenv dotenv = Dotenv.load();
 
     private static final String URL = String.format(
-        "%s:%s://%s:%s/%s",
-        dotenv.get("DB_DRIVER"),
+        "jdbc:%s://%s:%s/%s",
         dotenv.get("DB_CONNECTION"),
         dotenv.get("DB_HOST"),
         dotenv.get("DB_PORT"),
