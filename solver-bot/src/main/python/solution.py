@@ -10,7 +10,7 @@ REQUEST_TIMEOUT = 60
 MAX_RETRIES = 3
 RETRY_DELAY = 1
 
-async def set_java_parameters(user_id, method, order, equation, initial_x, initial_y, reach_point, step_size):
+async def set_parameters(user_id, method, order, equation, initial_x, initial_y, reach_point, step_size):
     method_mapping = {
         "method_euler": 1,
         "method_modified_euler": 2,
@@ -87,15 +87,7 @@ async def get_application_status(application_id):
             f"{JAVA_SERVER_URL}/application/{application_id}/status"
         ) as response:
             response.raise_for_status()
-            content_type = response.headers.get('Content-Type', '')
-            if 'application/json' in content_type:
-                return await response.json()
-            else:
-                text = await response.text()
-                try:
-                    return json.loads(text)
-                except json.JSONDecodeError:
-                    return text
+            return await response.text()
 
 
 async def get_application_creation_date(application_id):
@@ -105,15 +97,7 @@ async def get_application_creation_date(application_id):
             f"{JAVA_SERVER_URL}/application/{application_id}/creation_date"
         ) as response:
             response.raise_for_status()
-            content_type = response.headers.get('Content-Type', '')
-            if 'application/json' in content_type:
-                return await response.json()
-            else:
-                text = await response.text()
-                try:
-                    return json.loads(text)
-                except json.JSONDecodeError:
-                    return text
+            return await response.text()
 
 
 async def get_recent_applications(user_id):

@@ -3,7 +3,7 @@ import json
 from logger import logger
 from plotting.plotter import plot_solution
 from solution import (
-    set_java_parameters,
+    set_parameters,
     set_user_settings,
     get_user_settings,
     get_result_info,
@@ -581,7 +581,7 @@ async def step_size(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
         
         try:
-            application_id = await set_java_parameters(
+            application_id = await set_parameters(
                 user_id=user.id,
                 method=context.user_data['method'],
                 order=context.user_data['order'],
@@ -612,7 +612,7 @@ async def step_size(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 reply_markup=new_reply_markup
             )
             return MENU
-            
+
         result = await get_solution(application_id)
         x_values = await get_x_values(application_id)
         y_values = await get_y_values(application_id)
