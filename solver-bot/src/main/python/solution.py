@@ -10,7 +10,7 @@ REQUEST_TIMEOUT = 60
 MAX_RETRIES = 3
 RETRY_DELAY = 1
 
-async def set_parameters(user_id, method, order, equation, initial_x, initial_y, reach_point, step_size):
+async def set_parameters(user_id, method, order, user_equation, formatted_equation, initial_x, initial_y, reach_point, step_size):
     method_mapping = {
         "method_euler": 1,
         "method_modified_euler": 2,
@@ -21,7 +21,8 @@ async def set_parameters(user_id, method, order, equation, initial_x, initial_y,
     payload = {
         "method": method_mapping.get(method, 1),
         "order": int(order),
-        "equation": replace_math_functions(equation),
+        "userEquation": user_equation,
+        "formattedEquation": replace_math_functions(formatted_equation),
         "initialX": float(initial_x),
         "initialY": list(map(float, initial_y.split())),
         "reachPoint": float(reach_point),
@@ -62,12 +63,19 @@ async def set_user_settings(user_id, language, rounding, method):
             return await response.text()
 
 
-async def get_user_settings(user_id):
+async def get_user_settings(user_id, language, rounding, method):
     timeout = ClientTimeout(total=REQUEST_TIMEOUT)
     async with ClientSession(timeout=timeout) as session:
         async with session.get(
             f"{JAVA_SERVER_URL}/user-settings/{user_id}"
         ) as response:
+            if response.status == 500:
+                return {
+                    'method': method,
+                    'rounding': rounding,
+                    'language': language
+                }
+
             response.raise_for_status()
             content_type = response.headers.get('Content-Type', '')
             if 'application/json' in content_type:
@@ -106,6 +114,8 @@ async def get_recent_applications(user_id):
         async with session.get(
             f"{JAVA_SERVER_URL}/application/list/{user_id}"
         ) as response:
+            if response.status == 500:
+                return []
             response.raise_for_status()
             content_type = response.headers.get('Content-Type', '')
             if 'application/json' in content_type:
@@ -117,14 +127,27 @@ async def get_recent_applications(user_id):
                 except json.JSONDecodeError:
                     return []
 
+            valid_statuses = {"new", "in_progress", "completed"}
+
+            filtered = []
+
             if isinstance(data, list):
-                return data[:5]
+                for app in data:
+                    if isinstance(app, dict) and app.get("status") in valid_statuses:
+                        filtered.append(app)
+                        if len(filtered) == 5:
+                            break
+                return filtered
+
             elif isinstance(data, dict) and 'applications' in data:
                 applications = data['applications']
                 if isinstance(applications, list):
-                    if applications and isinstance(applications[0], dict) and 'id' in applications[0]:
-                        return [app['id'] for app in applications[:5]]
-                    return applications[:5]
+                    for app in applications:
+                        if isinstance(app, dict) and app.get("status") in valid_statuses:
+                            filtered.append(app.get('id') if 'id' in app else app)
+                            if len(filtered) == 5:
+                                break
+                    return filtered
 
             return []
 

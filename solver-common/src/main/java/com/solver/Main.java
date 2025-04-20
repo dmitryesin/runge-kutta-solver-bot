@@ -27,6 +27,8 @@ public class Main {
         this.order = order;
     }
 
+    public void setUserEquation(String userEquation) {}
+
     public void setEquation(String equation) {
         this.equationFunction = CreateEquationFunction.create(equation, this.order);
     }

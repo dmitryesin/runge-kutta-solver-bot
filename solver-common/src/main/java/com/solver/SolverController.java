@@ -42,7 +42,8 @@ public class SolverController {
 
                 main.setMethod(request.getMethod());
                 main.setOrder(request.getOrder());
-                main.setEquation(request.getEquation());
+                main.setUserEquation(request.getUserEquation());
+                main.setEquation(request.getFormattedEquation());
                 main.setInitialX(request.getInitialX());
                 main.setInitialY(request.getInitialY());
                 main.setReachPoint(request.getReachPoint());
@@ -89,7 +90,8 @@ public class SolverController {
 
                         main.setMethod(request.getMethod());
                         main.setOrder(request.getOrder());
-                        main.setEquation(request.getEquation());
+                        main.setUserEquation(request.getUserEquation());
+                        main.setEquation(request.getFormattedEquation());
                         main.setInitialX(request.getInitialX());
                         main.setInitialY(request.getInitialY());
                         main.setReachPoint(request.getReachPoint());

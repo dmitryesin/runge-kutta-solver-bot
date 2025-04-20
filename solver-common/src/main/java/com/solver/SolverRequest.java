@@ -6,7 +6,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 public class SolverRequest {
     private int method;
     private int order;
-    private String equation;
+    private String userEquation;
+    private String formattedEquation;
     private double initialX;
     private double[] initialY;
     private double reachPoint;
@@ -18,8 +19,11 @@ public class SolverRequest {
     public int getOrder() { return order; }
     public void setOrder(int order) { this.order = order; }
 
-    public String getEquation() { return equation; }
-    public void setEquation(String equation) { this.equation = equation; }
+    public String getUserEquation() { return userEquation; }
+    public void setUserEquation(String userEquation) { this.userEquation = userEquation; }
+
+    public String getFormattedEquation() { return formattedEquation; }
+    public void setFormattedEquation(String formattedEquation) { this.formattedEquation = formattedEquation; }
 
     public double getInitialX() { return initialX; }
     public void setInitialX(double initialX) { this.initialX = initialX; }

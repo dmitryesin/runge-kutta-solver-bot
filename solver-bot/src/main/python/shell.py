@@ -10,6 +10,7 @@ from solution import (
     get_x_values,
     get_y_values,
     get_solution,
+    get_recent_applications,
     wait_for_application_completion)
 from equation.equation_parser import format_equation
 from equation.equation_validator import (
@@ -49,7 +50,13 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.edited_message:
         return MENU
 
-    user_settings = await get_user_settings(update.effective_user.id)
+    user_settings = await get_user_settings(
+        update.effective_user.id,
+        DEFAULT_LANGUAGE,
+        DEFAULT_ROUNDING,
+        DEFAULT_METHOD
+    )
+
     context.user_data['method'] = user_settings.get('method', DEFAULT_METHOD)
     context.user_data['rounding'] = user_settings.get('rounding', DEFAULT_ROUNDING)
     context.user_data['language'] = user_settings.get('language', DEFAULT_LANGUAGE)
@@ -329,11 +336,30 @@ async def solve_history(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     current_language = context.user_data.get('language', DEFAULT_LANGUAGE)
 
-    keyboard = [
-        [InlineKeyboardButton(
+    recent_applications = await get_recent_applications(update.effective_user.id)
+
+    keyboard = []
+
+    for index, application in enumerate(recent_applications):
+        try:
+            parameters = json.loads(application.get("parameters", "{}"))
+            equation = parameters.get("userEquation")
+        except json.JSONDecodeError:
+            equation = ""
+
+        keyboard.append([
+            InlineKeyboardButton(
+                f"{equation}",
+                callback_data=f"application_{index}"
+            )
+        ])
+
+    keyboard.append([
+        InlineKeyboardButton(
             LANG_TEXTS[current_language]["back"],
-            callback_data="back")]
-    ]
+            callback_data="back"
+        )
+    ])
 
     new_text = LANG_TEXTS[current_language]["solve_history_menu"]
     new_reply_markup = InlineKeyboardMarkup(keyboard)
@@ -381,6 +407,8 @@ async def equation(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user = update.message.from_user
     logger.info("Equation of %s: %s", user.id, update.message.text)
 
+    context.user_data['user_equation'] = update.message.text
+
     current_language = context.user_data.get('language', DEFAULT_LANGUAGE)
 
     is_valid_symbols, error_message = validate_symbols(update.message.text)
@@ -415,7 +443,7 @@ async def equation(update: Update, context: ContextTypes.DEFAULT_TYPE):
     logger.info("Formatted Equation of %s: %s", user.id, formatted_equation)
     logger.info("Order of %s: %s", user.id, order)
 
-    context.user_data['equation'] = formatted_equation
+    context.user_data['formatted_equation'] = formatted_equation
     context.user_data['order'] = order
     context.user_data['state'] = INITIAL_X
 
@@ -585,7 +613,8 @@ async def step_size(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 user_id=user.id,
                 method=context.user_data['method'],
                 order=context.user_data['order'],
-                equation=context.user_data['equation'],
+                user_equation=context.user_data['user_equation'],
+                formatted_equation=context.user_data['formatted_equation'],
                 initial_x=context.user_data['initial_x'],
                 initial_y=context.user_data['initial_y'],
                 reach_point=context.user_data['reach_point'],
