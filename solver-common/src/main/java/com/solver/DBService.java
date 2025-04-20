@@ -1,6 +1,7 @@
 package com.solver;
 
 import org.springframework.scheduling.annotation.Async;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -139,6 +140,36 @@ public class DBService {
                 } else {
                     return Optional.empty();
                 }
+            } catch (SQLException e) {
+                throw new RuntimeException(e);
+            }
+        });
+    }
+
+    @Async
+    public CompletableFuture<List<Map<String, Object>>> getApplicationsByUserId(Integer userId) {
+        return CompletableFuture.supplyAsync(() -> {
+            String query = """
+                SELECT id, parameters, status, created_at, last_updated_at
+                FROM applications
+                WHERE user_id = ?
+                ORDER BY created_at DESC
+                """;
+            try (Connection conn = DBConnection.getConnection();
+                 PreparedStatement stmt = conn.prepareStatement(query)) {
+                stmt.setInt(1, userId);
+                ResultSet rs = stmt.executeQuery();
+                List<Map<String, Object>> applications = new ArrayList<>();
+                while (rs.next()) {
+                    Map<String, Object> application = new HashMap<>();
+                    application.put("id", rs.getInt("id"));
+                    application.put("parameters", rs.getString("parameters"));
+                    application.put("status", rs.getString("status"));
+                    application.put("created_at", rs.getString("created_at"));
+                    application.put("last_updated_at", rs.getString("last_updated_at"));
+                    applications.add(application);
+                }
+                return applications;
             } catch (SQLException e) {
                 throw new RuntimeException(e);
             }
@@ -324,29 +355,27 @@ public class DBService {
     }
 
     @Async
-    public CompletableFuture<List<Map<String, Object>>> getApplicationsByUserId(Integer userId) {
-        return CompletableFuture.supplyAsync(() -> {
+    @Scheduled(cron = "0 0 3 * * *") // Every day at 3:00 AM
+    public CompletableFuture<Void> cleanOldApplications() {
+        return CompletableFuture.runAsync(() -> {
             String query = """
-                SELECT id, parameters, status, created_at, last_updated_at
-                FROM applications
-                WHERE user_id = ?
-                ORDER BY created_at DESC
+                WITH ranked_applications AS (
+                    SELECT id, user_id, created_at,
+                        ROW_NUMBER() OVER (PARTITION BY user_id ORDER BY created_at DESC) AS row_num
+                    FROM applications
+                ),
+                to_delete AS (
+                    SELECT id
+                    FROM ranked_applications
+                    WHERE row_num > 5
+                    AND created_at < NOW() - INTERVAL '14 days'
+                )
+                DELETE FROM applications
+                WHERE id IN (SELECT id FROM to_delete);
                 """;
             try (Connection conn = DBConnection.getConnection();
                  PreparedStatement stmt = conn.prepareStatement(query)) {
-                stmt.setInt(1, userId);
-                ResultSet rs = stmt.executeQuery();
-                List<Map<String, Object>> applications = new ArrayList<>();
-                while (rs.next()) {
-                    Map<String, Object> application = new HashMap<>();
-                    application.put("id", rs.getInt("id"));
-                    application.put("parameters", rs.getString("parameters"));
-                    application.put("status", rs.getString("status"));
-                    application.put("created_at", rs.getString("created_at"));
-                    application.put("last_updated_at", rs.getString("last_updated_at"));
-                    applications.add(application);
-                }
-                return applications;
+                stmt.executeUpdate();
             } catch (SQLException e) {
                 throw new RuntimeException(e);
             }
