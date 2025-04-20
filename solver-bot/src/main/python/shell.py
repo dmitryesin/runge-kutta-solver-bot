@@ -438,7 +438,8 @@ async def solve_history_details(update: Update, context: ContextTypes.DEFAULT_TY
             f"<b>{LANG_TEXTS[current_language]['initial_y']}:</b> {initial_y_str}\n"
             f"<b>{LANG_TEXTS[current_language]['reach_point']}:</b> {reach_point}\n"
             f"<b>{LANG_TEXTS[current_language]['step_size']}:</b> {step_size}\n\n"
-            f"<b>{LANG_TEXTS[current_language]['solution']}:</b>\n{get_result_info(solution, order, current_rounding)}"
+            f"<b>{LANG_TEXTS[current_language]['solution']}:</b>\n"
+            f"{get_result_info(solution, order, current_rounding)}"
         )
 
         keyboard = [
@@ -839,35 +840,38 @@ def main() -> None:
     conv_handler = ConversationHandler(
         entry_points=[CommandHandler("start", start)],
         states={
-            MENU:
-            [CallbackQueryHandler(solve, pattern="^solve$"),
-             CallbackQueryHandler(solve_history, pattern="^solve_history$"),
-             CallbackQueryHandler(solve_history, pattern="^solve_history_back$"),
-             CallbackQueryHandler(solve_history_details, pattern=r"^application_\d+$"),
-             CallbackQueryHandler(start, pattern="^back$"),
-             CallbackQueryHandler(start, pattern="^menu$"),
-             CallbackQueryHandler(settings, pattern="^settings$"),
-             CallbackQueryHandler(settings, pattern="^settings_back$"),
-             CallbackQueryHandler(settings_method, pattern="^settings_method$"),
-             CallbackQueryHandler(settings_rounding, pattern="^settings_rounding$"),
-             CallbackQueryHandler(settings_language, pattern="^settings_language$"),
-             CallbackQueryHandler(
-                 method, pattern="^method_(euler|modified_euler|runge_kutta|dormand_prince)$"),
-             CallbackQueryHandler(rounding, pattern="^(4|6|8|16)$"),
-             CallbackQueryHandler(language, pattern="^(en|ru)$")],
-            EQUATION:
-            [MessageHandler(filters.TEXT & ~filters.COMMAND, equation)],
-            INITIAL_X:
-            [MessageHandler(filters.TEXT & ~filters.COMMAND, initial_x)],
-            INITIAL_Y:
-            [MessageHandler(filters.TEXT & ~filters.COMMAND, initial_y)],
-            REACH_POINT:
-            [MessageHandler(filters.TEXT & ~filters.COMMAND, reach_point)],
-            STEP_SIZE:
-            [MessageHandler(filters.TEXT & ~filters.COMMAND, step_size)],
+            MENU: [
+                CallbackQueryHandler(solve, pattern="^solve$"),
+                CallbackQueryHandler(solve_history, pattern="^solve_history$"),
+                CallbackQueryHandler(solve_history, pattern="^solve_history_back$"),
+                CallbackQueryHandler(
+                    solve_history_details,
+                    pattern=r"^application_\d+$"
+                ),
+                CallbackQueryHandler(start, pattern="^back$"),
+                CallbackQueryHandler(start, pattern="^menu$"),
+                CallbackQueryHandler(settings, pattern="^settings$"),
+                CallbackQueryHandler(settings, pattern="^settings_back$"),
+                CallbackQueryHandler(settings_method, pattern="^settings_method$"),
+                CallbackQueryHandler(settings_rounding, pattern="^settings_rounding$"),
+                CallbackQueryHandler(settings_language, pattern="^settings_language$"),
+                CallbackQueryHandler(
+                    method,
+                    pattern="^method_(euler|modified_euler|runge_kutta|dormand_prince)$"
+                ),
+                CallbackQueryHandler(rounding, pattern="^(4|6|8|16)$"),
+                CallbackQueryHandler(language, pattern="^(en|ru)$")
+            ],
+            EQUATION: [MessageHandler(filters.TEXT & ~filters.COMMAND, equation)],
+            INITIAL_X: [MessageHandler(filters.TEXT & ~filters.COMMAND, initial_x)],
+            INITIAL_Y: [MessageHandler(filters.TEXT & ~filters.COMMAND, initial_y)],
+            REACH_POINT: [MessageHandler(filters.TEXT & ~filters.COMMAND, reach_point)],
+            STEP_SIZE: [MessageHandler(filters.TEXT & ~filters.COMMAND, step_size)],
         },
-        fallbacks=[CommandHandler("cancel", cancel),
-                   CommandHandler("start", start)],
+        fallbacks=[
+            CommandHandler("cancel", cancel),
+            CommandHandler("start", start)
+        ],
     )
 
     application.add_handler(conv_handler)
