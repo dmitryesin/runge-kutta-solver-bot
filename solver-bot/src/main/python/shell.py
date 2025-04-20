@@ -19,7 +19,8 @@ from equation.equation_validator import (
 from telegram import (
     Update,
     InlineKeyboardButton,
-    InlineKeyboardMarkup
+    InlineKeyboardMarkup,
+    InputMediaPhoto
 )
 from telegram.ext import (
     Application,
@@ -365,9 +366,110 @@ async def solve_history(update: Update, context: ContextTypes.DEFAULT_TYPE):
     new_reply_markup = InlineKeyboardMarkup(keyboard)
 
     if query.message.text != new_text or query.message.reply_markup != new_reply_markup:
-        await query.edit_message_text(
+        await query.message.reply_text(
             new_text,
             reply_markup=new_reply_markup
+        )
+
+    return MENU
+
+
+async def solve_history_details(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    query = update.callback_query
+    await query.answer()
+
+    current_language = context.user_data.get('language', DEFAULT_LANGUAGE)
+    current_rounding = context.user_data.get('rounding', DEFAULT_ROUNDING)
+
+    application_index = int(query.data.split('_')[1])
+
+    recent_applications = await get_recent_applications(update.effective_user.id)
+
+    if application_index >= len(recent_applications):
+        await query.edit_message_text(
+            LANG_TEXTS[current_language]["application_not_found"],
+            reply_markup=InlineKeyboardMarkup([[
+                InlineKeyboardButton(
+                    LANG_TEXTS[current_language]["back"],
+                    callback_data="solve_history_back"
+                )
+            ]])
+        )
+        return MENU
+
+    application = recent_applications[application_index]
+    application_id = application.get('id')
+
+    try:
+        parameters = json.loads(application.get("parameters", "{}"))
+        order = parameters.get("order", 1)
+
+        method = parameters.get("method", "")
+        user_equation = parameters.get("userEquation", "")
+        initial_x = parameters.get("initialX", "")
+        initial_y = parameters.get("initialY", "")
+        reach_point = parameters.get("reachPoint", "")
+        step_size = parameters.get("stepSize", "")
+
+        x_values = await get_x_values(application_id)
+        y_values = await get_y_values(application_id)
+        solution = await get_solution(application_id)
+
+        plot_graph = plot_solution(x_values, y_values, order)
+
+        if isinstance(initial_y, list):
+            initial_y_str = ", ".join([str(y) for y in initial_y])
+        else:
+            initial_y_str = str(initial_y)
+
+        method_mapping = {
+            1: LANG_TEXTS[current_language]["method_euler"],
+            2: LANG_TEXTS[current_language]["method_modified_euler"],
+            4: LANG_TEXTS[current_language]["method_runge_kutta"],
+            7: LANG_TEXTS[current_language]["method_dormand_prince"]
+        }
+
+        method_display = method_mapping.get(method, method)
+
+        details_text = (
+            f"<b>{LANG_TEXTS[current_language]['method']}:</b> {method_display}\n"
+            f"<b>{LANG_TEXTS[current_language]['equation']}:</b> {user_equation}\n"
+            f"<b>{LANG_TEXTS[current_language]['initial_x']}:</b> {initial_x}\n"
+            f"<b>{LANG_TEXTS[current_language]['initial_y']}:</b> {initial_y_str}\n"
+            f"<b>{LANG_TEXTS[current_language]['reach_point']}:</b> {reach_point}\n"
+            f"<b>{LANG_TEXTS[current_language]['step_size']}:</b> {step_size}\n\n"
+            f"<b>{LANG_TEXTS[current_language]['solution']}:</b>\n{get_result_info(solution, order, current_rounding)}"
+        )
+
+        keyboard = [
+            [InlineKeyboardButton(
+                LANG_TEXTS[current_language]["back"],
+                callback_data="solve_history_back"
+            )]
+        ]
+
+        media = InputMediaPhoto(
+            media=plot_graph,
+            caption=details_text,
+            parse_mode="HTML"
+        )
+
+        await query.edit_message_media(
+            media=media,
+            reply_markup=InlineKeyboardMarkup(keyboard)
+        )
+        plot_graph.close()
+
+    except Exception as e:
+        logger.error(f"Error displaying application details: {e}")
+        await query.edit_message_text(
+            LANG_TEXTS[current_language]["error_displaying_application"],
+            reply_markup=InlineKeyboardMarkup([[
+                InlineKeyboardButton(
+                    LANG_TEXTS[current_language]["back"],
+                    callback_data="solve_history_back"
+                )
+            ]])
         )
 
     return MENU
@@ -740,6 +842,8 @@ def main() -> None:
             MENU:
             [CallbackQueryHandler(solve, pattern="^solve$"),
              CallbackQueryHandler(solve_history, pattern="^solve_history$"),
+             CallbackQueryHandler(solve_history, pattern="^solve_history_back$"),
+             CallbackQueryHandler(solve_history_details, pattern=r"^application_\d+$"),
              CallbackQueryHandler(start, pattern="^back$"),
              CallbackQueryHandler(start, pattern="^menu$"),
              CallbackQueryHandler(settings, pattern="^settings$"),
