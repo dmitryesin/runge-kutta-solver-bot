@@ -10,7 +10,10 @@ REQUEST_TIMEOUT = 60
 MAX_RETRIES = 3
 RETRY_DELAY = 1
 
-async def set_parameters(user_id, method, order, user_equation, formatted_equation, initial_x, initial_y, reach_point, step_size):
+async def set_parameters(
+    user_id, method, order, user_equation, formatted_equation,
+    initial_x, initial_y, reach_point, step_size
+):
     method_mapping = {
         "method_euler": 1,
         "method_modified_euler": 2,
@@ -227,28 +230,3 @@ async def wait_for_application_completion(application_id):
             await asyncio.sleep(RETRY_DELAY)
     
     return False
-
-
-def get_result_info(result, order, rounding):
-    try:
-        order = int(order)
-    except ValueError:
-        return ""
-
-    superscripts = "⁰¹²³⁴⁵⁶⁷⁸⁹"
-
-    def get_variable_name(i):
-        if i < 4:
-            return f"y{chr(39) * i}"
-        return f"y{"⁽"}{''.join(superscripts[int(d)] for d in str(i))}{"⁾"}"
-
-    result_str = f"x: {result[0]:.2f}"
-    variable_names = ["y"] + [get_variable_name(i) for i in range(1, int(order))]
-
-    for i in range(1, order + 1):
-        if i < len(result):
-            result_str += f", {variable_names[i-1]}: {result[i]:.{rounding}f}"
-        else:
-            result_str += f", {variable_names[i-1]}: NaN"
-
-    return result_str

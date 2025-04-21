@@ -2,11 +2,11 @@ import json
 
 from logger import logger
 from plotting.plotter import plot_solution
-from solution import (
+from printing.printer import print_solution
+from spring_client import (
     set_parameters,
     set_user_settings,
     get_user_settings,
-    get_result_info,
     get_x_values,
     get_y_values,
     get_solution,
@@ -441,7 +441,7 @@ async def solve_history_details(update: Update, context: ContextTypes.DEFAULT_TY
             f"<b>{LANG_TEXTS[current_language]['reach_point']}:</b> {reach_point}\n"
             f"<b>{LANG_TEXTS[current_language]['step_size']}:</b> {step_size}\n\n"
             f"<b>{LANG_TEXTS[current_language]['solution']}:</b>\n"
-            f"{get_result_info(solution, order, current_rounding)}"
+            f"{print_solution(solution, order, current_rounding)}"
         )
 
         keyboard = [
@@ -676,9 +676,6 @@ async def reach_point(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 async def step_size(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    if update.edited_message:
-        return STEP_SIZE
-
     user = update.message.from_user
     user_input = update.message.text.strip()
 
@@ -696,6 +693,16 @@ async def step_size(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     logger.info("Step size of %s: %s", user.id, user_input)
     context.user_data['step_size'] = user_input
+
+    return await solution(update, context)
+
+
+async def solution(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if update.edited_message:
+        return STEP_SIZE
+
+    user = update.message.from_user
+    current_language = context.user_data.get('language', DEFAULT_LANGUAGE)
 
     keyboard = [
         [InlineKeyboardButton(
@@ -778,15 +785,15 @@ async def step_size(update: Update, context: ContextTypes.DEFAULT_TYPE):
                                y_values,
                                context.user_data['order'])
 
-    print_result_info = get_result_info(result,
+    print_result = print_solution(result,
                                         context.user_data['order'],
                                         context.user_data['rounding'])
 
-    logger.info("Result of %s: %s", user.id, print_result_info)
+    logger.info("Result of %s: %s", user.id, print_result)
 
     await update.message.reply_photo(
         photo=plot_graph,
-        caption=print_result_info,
+        caption=print_result,
         reply_markup=new_reply_markup
     )
     plot_graph.close()

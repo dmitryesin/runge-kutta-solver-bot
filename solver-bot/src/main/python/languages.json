@@ -3,21 +3,25 @@
         "solve": "Solve",
         "solve_over": "Solve Over",
         "solve_history": "Solution History",
-        "solve_history_menu": "Solution history menu. Choose an option:",
         "settings": "Settings",
+
+        "solve_history_menu": "Solution history menu. Choose an option:",
         "settings_menu": "Settings menu. Choose an option:",
         "change_method": "Change Numerical Method",
         "change_rounding": "Change Rounding",
         "change_language": "Change Language",
         "without_rounding": "Without Rounding",
+
         "back": "\u2039 Back",
         "menu": "\u2039 Menu",
+
         "enter_equation": "Enter the differential equation.",
         "enter_x": "Enter the initial state of x.",
         "enter_y": "Enter the initial state of y.",
         "enter_y_multiple": "Enter the initial states of y separated by space.",
         "enter_reach_point": "Enter the approximation point.",
         "enter_step_size": "Enter the step size.",
+
         "equation_error": "The equation is incorrect.",
         "symbols_error": "The equation contains invalid symbols: ",
         "parentheses_error": "The equation contains unbalanced parentheses, or there is nothing in them.",
@@ -27,6 +31,7 @@
         "invalid_initial_y_count2": "Expected: ",
         "invalid_reach_point": "Invalid approximation point.",
         "invalid_step_size": "Invalid step size value.",
+
         "processing": "Processing your request...",
         "processing_longer": "It may take longer than usual to process your request. Please wait...",
         "processing_error": "Error processing your request.",
@@ -36,15 +41,17 @@
         "application_not_found": "Task not found.",
         "error_displaying_application": "Error displaying task details.",
         "cancel": "Actions canceled.",
+
         "method_euler": "Euler's Method",
         "method_modified_euler": "Improved Euler's Method",
         "method_runge_kutta": "Runge-Kutta Method",
         "method_dormand_prince": "Dormand-Prince Method",
+
         "method": "Method",
         "equation": "Equation",
         "initial_x": "Initial X",
         "initial_y": "Initial Y",
-        "reach_point": "Reach Point",
+        "reach_point": "Approximation Point",
         "step_size": "Step Size",
         "solution": "Solution"
     },
@@ -52,21 +59,25 @@
         "solve": "Решить",
         "solve_over": "Решить Заново",
         "solve_history": "История Решений",
-        "solve_history_menu": "Меню истории решений. Выберите опцию:",
         "settings": "Настройки",
+
+        "solve_history_menu": "Меню истории решений. Выберите опцию:",
         "settings_menu": "Меню настроек. Выберите опцию:",
         "change_method": "Изменить Численный Метод",
         "change_rounding": "Изменить Округление",
         "change_language": "Изменить Язык",
         "without_rounding": "Без Округления",
+
         "back": "\u2039 Назад",
         "menu": "\u2039 Меню",
+
         "enter_equation": "Введите дифференциальное уравнение.",
         "enter_x": "Введите начальное значение x.",
         "enter_y": "Введите начальное значение y.",
         "enter_y_multiple": "Введите начальные значения y через пробел.",
         "enter_reach_point": "Введите точку аппроксимации.",
         "enter_step_size": "Введите размер шага.",
+
         "equation_error": "Уравнение некорректно.",
         "symbols_error": "Уравнение содержит недопустимые символы: ",
         "parentheses_error": "Уравнение содержит не сбалансированные скобки, либо в них ничего нет.",
@@ -76,6 +87,7 @@
         "invalid_initial_y_count2": "Ожидалось: ",
         "invalid_reach_point": "Некорректное значение точки аппроксимации.",
         "invalid_step_size": "Некорректное значение размера шага.",
+
         "processing": "Обработка вашего запроса...",
         "processing_longer": "Обработка вашего запроса может занять больше времени, чем обычно. Пожалуйста, подождите...",
         "processing_error": "Ошибка при обработке вашего запроса.",
@@ -85,10 +97,12 @@
         "application_not_found": "Задача не найдена.",
         "error_displaying_application": "Ошибка при отображении деталей задачи.",
         "cancel": "Действия отменены.",
+
         "method_euler": "Метод Эйлера",
         "method_modified_euler": "Улучшенный метод Эйлера",
         "method_runge_kutta": "Метод Рунге-Кутта",
         "method_dormand_prince": "Метод Дормана-Принса",
+
         "method": "Метод",
         "equation": "Уравнение",
         "initial_x": "Начальное X",
