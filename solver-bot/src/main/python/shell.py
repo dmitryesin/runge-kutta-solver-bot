@@ -362,13 +362,15 @@ async def solve_history(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
     ])
 
-    new_text = LANG_TEXTS[current_language]["solve_history_menu"]
-    new_reply_markup = InlineKeyboardMarkup(keyboard)
-
-    if query.message.text != new_text or query.message.reply_markup != new_reply_markup:
+    if query.message and query.message.text:
+        await query.edit_message_text(
+            LANG_TEXTS[current_language]["solve_history_menu"],
+            reply_markup=InlineKeyboardMarkup(keyboard)
+        )
+    else:
         await query.message.reply_text(
-            new_text,
-            reply_markup=new_reply_markup
+            LANG_TEXTS[current_language]["solve_history_menu"],
+            reply_markup=InlineKeyboardMarkup(keyboard)
         )
 
     return MENU
