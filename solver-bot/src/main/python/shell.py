@@ -761,7 +761,7 @@ async def solution(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await processing_message.delete()
 
     except Exception as e:
-        logger.error("Error while setting Java parameters: %s", e)
+        logger.error("Error while setting/getting Java parameters: %s", e)
         await save_user_settings(context)
         await processing_message.delete()
         await update.message.reply_text(
@@ -781,13 +781,17 @@ async def solution(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
         return MENU
 
-    plot_graph = plot_solution(x_values,
-                               y_values,
-                               context.user_data['order'])
+    plot_graph = plot_solution(
+        x_values,
+        y_values,
+        context.user_data['order']
+    )
 
-    print_result = print_solution(result,
-                                        context.user_data['order'],
-                                        context.user_data['rounding'])
+    print_result = print_solution(
+        result,
+        context.user_data['order'],
+        context.user_data['rounding']
+    )
 
     logger.info("Result of %s: %s", user.id, print_result)
 
