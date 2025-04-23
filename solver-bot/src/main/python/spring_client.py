@@ -91,26 +91,6 @@ async def get_user_settings(user_id, language, rounding, method):
                     return text
 
 
-async def get_application_status(application_id):
-    timeout = ClientTimeout(total=REQUEST_TIMEOUT)
-    async with ClientSession(timeout=timeout) as session:
-        async with session.get(
-            f"{JAVA_SERVER_URL}/application/{application_id}/status"
-        ) as response:
-            response.raise_for_status()
-            return await response.text()
-
-
-async def get_application_creation_date(application_id):
-    timeout = ClientTimeout(total=REQUEST_TIMEOUT)
-    async with ClientSession(timeout=timeout) as session:
-        async with session.get(
-            f"{JAVA_SERVER_URL}/application/{application_id}/creation_date"
-        ) as response:
-            response.raise_for_status()
-            return await response.text()
-
-
 async def get_recent_applications(user_id):
     timeout = ClientTimeout(total=REQUEST_TIMEOUT)
     async with ClientSession(timeout=timeout) as session:
@@ -210,6 +190,16 @@ async def get_y_values(application_id):
                 except json.JSONDecodeError:
                     raise ValueError(f"Failed to parse y-values data: {text}")
             return np.array(data)
+
+
+async def get_application_status(application_id):
+    timeout = ClientTimeout(total=REQUEST_TIMEOUT)
+    async with ClientSession(timeout=timeout) as session:
+        async with session.get(
+            f"{JAVA_SERVER_URL}/application/{application_id}/status"
+        ) as response:
+            response.raise_for_status()
+            return await response.text()
 
 
 async def wait_for_application_completion(application_id):

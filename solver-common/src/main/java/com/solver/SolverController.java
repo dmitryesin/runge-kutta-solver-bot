@@ -140,20 +140,6 @@ public class SolverController {
                     new RuntimeException("Application status not found for applicationId: " + applicationId)));
     }
 
-    @GetMapping("/application/{applicationId}/creation_date")
-    public CompletableFuture<String> getApplicationCreationDateByApplicationId(@PathVariable("applicationId") int applicationId) {
-        return dbService.getApplicationCreationDateByApplicationId(applicationId)
-                .thenApply(optionalDate -> optionalDate.orElseThrow(() -> 
-                    new RuntimeException("Creation date not found for applicationId: " + applicationId)));
-    }
-
-    @GetMapping("/application/{applicationId}/update_date")
-    public CompletableFuture<String> getApplicationUpdateDateByApplicationId(@PathVariable("applicationId") int applicationId) {
-        return dbService.getApplicationUpdateDateByApplicationId(applicationId)
-                .thenApply(optionalDate -> optionalDate.orElseThrow(() -> 
-                    new RuntimeException("Update date not found for applicationId: " + applicationId)));
-    }
-
     @GetMapping("/application/list/{userId}")
     public CompletableFuture<List<Map<String, Object>>> getApplicationsByUserId(@PathVariable("userId") Integer userId) {
         return dbService.getApplicationsByUserId(userId)

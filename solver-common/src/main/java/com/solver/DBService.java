@@ -273,51 +273,6 @@ public class DBService {
     }
 
     @Async
-    public CompletableFuture<Optional<String>> getApplicationCreationDateByApplicationId(int applicationId) {
-        return CompletableFuture.supplyAsync(() -> {
-            String query = """
-                SELECT created_at
-                FROM applications
-                WHERE id = ?
-                """;
-            try (Connection conn = DBConnection.getConnection();
-                PreparedStatement stmt = conn.prepareStatement(query)) {
-                stmt.setInt(1, applicationId);
-                ResultSet rs = stmt.executeQuery();
-                if (rs.next()) {
-                    return Optional.of(rs.getString("created_at"));
-                } else {
-                    return Optional.empty();
-                }
-            } catch (SQLException e) {
-                throw new RuntimeException(e);
-            }
-        });
-    }
-
-    public CompletableFuture<Optional<String>> getApplicationUpdateDateByApplicationId(int applicationId) {
-        return CompletableFuture.supplyAsync(() -> {
-            String query = """
-                SELECT last_updated_at
-                FROM applications
-                WHERE id = ?
-                """;
-            try (Connection conn = DBConnection.getConnection();
-                PreparedStatement stmt = conn.prepareStatement(query)) {
-                stmt.setInt(1, applicationId);
-                ResultSet rs = stmt.executeQuery();
-                if (rs.next()) {
-                    return Optional.of(rs.getString("last_updated_at"));
-                } else {
-                    return Optional.empty();
-                }
-            } catch (SQLException e) {
-                throw new RuntimeException(e);
-            }
-        });
-    }
-
-    @Async
     public CompletableFuture<Void> updateApplicationStatus(int applicationId, String status) {
         return CompletableFuture.runAsync(() -> {
             String query = """
