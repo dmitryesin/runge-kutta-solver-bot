@@ -13,6 +13,7 @@ This bot is designed to solve differential equations of various orders using num
   - Runge-Kutta Method
   - Dormand-Prince Method
 - Generates plots of solutions for better visualization.
+- Solution history tracking.
 - Multilingual support (English and Russian).
 - Configurable settings for numerical methods, rounding precision, and language.
 
