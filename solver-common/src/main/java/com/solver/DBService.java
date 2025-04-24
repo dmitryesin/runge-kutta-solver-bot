@@ -310,7 +310,7 @@ public class DBService {
     }
 
     @Async
-    @Scheduled(cron = "0 0 3 * * *") // Every day at 3:00 AM
+    @Scheduled(cron = "0 */15 * * * *") // Every 15 minutes
     public CompletableFuture<Void> cleanOldApplications() {
         return CompletableFuture.runAsync(() -> {
             String query = """
