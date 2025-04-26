@@ -59,7 +59,7 @@ async def set_user_settings(user_id, language, rounding, method):
     timeout = ClientTimeout(total=REQUEST_TIMEOUT)
     async with ClientSession(timeout=timeout) as session:
         async with session.post(
-            f"{JAVA_SERVER_URL}/user-settings/{user_id}",
+            f"{JAVA_SERVER_URL}/users/{user_id}",
             params=payload
         ) as response:
             response.raise_for_status()
@@ -70,7 +70,7 @@ async def get_user_settings(user_id, language, rounding, method):
     timeout = ClientTimeout(total=REQUEST_TIMEOUT)
     async with ClientSession(timeout=timeout) as session:
         async with session.get(
-            f"{JAVA_SERVER_URL}/user-settings/{user_id}"
+            f"{JAVA_SERVER_URL}/users/{user_id}"
         ) as response:
             if response.status == 500:
                 return {
@@ -95,7 +95,7 @@ async def get_recent_applications(user_id):
     timeout = ClientTimeout(total=REQUEST_TIMEOUT)
     async with ClientSession(timeout=timeout) as session:
         async with session.get(
-            f"{JAVA_SERVER_URL}/application/list/{user_id}"
+            f"{JAVA_SERVER_URL}/applications/list/{user_id}"
         ) as response:
             if response.status == 500:
                 return []
@@ -139,7 +139,7 @@ async def get_solution(application_id):
     timeout = ClientTimeout(total=REQUEST_TIMEOUT)
     async with ClientSession(timeout=timeout) as session:
         async with session.get(
-            f"{JAVA_SERVER_URL}/solution/{application_id}"
+            f"{JAVA_SERVER_URL}/results/{application_id}/solution"
         ) as response:
             response.raise_for_status()
             content_type = response.headers.get('Content-Type', '')
@@ -158,7 +158,7 @@ async def get_x_values(application_id):
     timeout = ClientTimeout(total=REQUEST_TIMEOUT)
     async with ClientSession(timeout=timeout) as session:
         async with session.get(
-            f"{JAVA_SERVER_URL}/x-values/{application_id}"
+            f"{JAVA_SERVER_URL}/results/{application_id}/xvalues"
         ) as response:
             response.raise_for_status()
             content_type = response.headers.get('Content-Type', '')
@@ -177,7 +177,7 @@ async def get_y_values(application_id):
     timeout = ClientTimeout(total=REQUEST_TIMEOUT)
     async with ClientSession(timeout=timeout) as session:
         async with session.get(
-            f"{JAVA_SERVER_URL}/y-values/{application_id}"
+            f"{JAVA_SERVER_URL}/results/{application_id}/yvalues"
         ) as response:
             response.raise_for_status()
             content_type = response.headers.get('Content-Type', '')
@@ -196,7 +196,7 @@ async def get_application_status(application_id):
     timeout = ClientTimeout(total=REQUEST_TIMEOUT)
     async with ClientSession(timeout=timeout) as session:
         async with session.get(
-            f"{JAVA_SERVER_URL}/application/{application_id}/status"
+            f"{JAVA_SERVER_URL}/applications/{application_id}/status"
         ) as response:
             response.raise_for_status()
             return await response.text()

@@ -17,7 +17,7 @@ public class SolverController {
     @Autowired
     private DBService dbService;
 
-    @PostMapping("/user-settings/{userId}")
+    @PostMapping("/users/{userId}")
     public CompletableFuture<String> setUserSettingsById(
             @PathVariable("userId") Integer userId,
             @RequestParam("language") String language,
@@ -119,28 +119,28 @@ public class SolverController {
         });
     }
 
-    @GetMapping("/user-settings/{userId}")
+    @GetMapping("/users/{userId}")
     public CompletableFuture<String> getUserSettingsById(@PathVariable("userId") Integer userId) {
         return dbService.getUserSettingsById(userId)
                 .thenApply(optionalSettings -> optionalSettings.orElseThrow(() -> 
                     new RuntimeException("User settings not found for userId: " + userId)));
     }
 
-    @GetMapping("/application/{applicationId}")
+    @GetMapping("/applications/{applicationId}")
     public CompletableFuture<String> getApplicationById(@PathVariable("applicationId") int applicationId) {
         return dbService.getApplicationById(applicationId)
                 .thenApply(optionalApplication -> optionalApplication.orElseThrow(() -> 
                     new RuntimeException("Application not found for applicationId: " + applicationId)));
     }
 
-    @GetMapping("/application/{applicationId}/status")
+    @GetMapping("/applications/{applicationId}/status")
     public CompletableFuture<String> getApplicationStatusByApplicationId(@PathVariable("applicationId") int applicationId) {
         return dbService.getApplicationStatusByApplicationId(applicationId)
                 .thenApply(optionalStatus -> optionalStatus.orElseThrow(() -> 
                     new RuntimeException("Application status not found for applicationId: " + applicationId)));
     }
 
-    @GetMapping("/application/list/{userId}")
+    @GetMapping("/applications/list/{userId}")
     public CompletableFuture<List<Map<String, Object>>> getApplicationsByUserId(@PathVariable("userId") Integer userId) {
         return dbService.getApplicationsByUserId(userId)
                 .thenApply(applications -> {
@@ -158,21 +158,21 @@ public class SolverController {
     }    
 
 
-    @GetMapping("/solution/{applicationId}")
+    @GetMapping("/results/{applicationId}/solution")
     public CompletableFuture<double[]> getSolutionByApplicationId(@PathVariable("applicationId") int applicationId) {
         return dbService.getSolutionByApplicationId(applicationId)
                 .thenApply(optionalSolution -> optionalSolution.orElseThrow(() -> 
                     new RuntimeException("Solution not found for applicationId: " + applicationId)));
     }
 
-    @GetMapping("/x-values/{applicationId}")
+    @GetMapping("/results/{applicationId}/xvalues")
     public CompletableFuture<List<Double>> getXValuesByApplicationId(@PathVariable("applicationId") int applicationId) {
         return dbService.getXValuesByApplicationId(applicationId)
                 .thenApply(optionalXValues -> optionalXValues.orElseThrow(() -> 
                     new RuntimeException("xValues not found for applicationId: " + applicationId)));
     }
 
-    @GetMapping("/y-values/{applicationId}")
+    @GetMapping("/results/{applicationId}/yvalues")
     public CompletableFuture<List<double[]>> getYValuesByApplicationId(@PathVariable("applicationId") int applicationId) {
         return dbService.getYValuesByApplicationId(applicationId)
                 .thenApply(optionalYValues -> optionalYValues.orElseThrow(() -> 
