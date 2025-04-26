@@ -124,29 +124,6 @@ public class DBService {
     }
 
     @Async
-    public CompletableFuture<Optional<String>> getApplicationById(int applicationId) {
-        return CompletableFuture.supplyAsync(() -> {
-            String query = """
-                SELECT parameters
-                FROM applications
-                WHERE id = ?
-                """;
-            try (Connection conn = DBConnection.getConnection();
-                 PreparedStatement stmt = conn.prepareStatement(query)) {
-                stmt.setInt(1, applicationId);
-                ResultSet rs = stmt.executeQuery();
-                if (rs.next()) {
-                    return Optional.of(rs.getString("parameters"));
-                } else {
-                    return Optional.empty();
-                }
-            } catch (SQLException e) {
-                throw new RuntimeException(e);
-            }
-        });
-    }
-
-    @Async
     public CompletableFuture<List<Map<String, Object>>> getApplicationsByUserId(Integer userId) {
         return CompletableFuture.supplyAsync(() -> {
             String query = """
