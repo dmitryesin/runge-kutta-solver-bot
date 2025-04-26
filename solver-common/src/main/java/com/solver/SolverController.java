@@ -151,6 +151,13 @@ public class SolverController {
                 });
     }
 
+    @GetMapping("/results/{applicationId}")
+    public CompletableFuture<String> getResultExists(@PathVariable("applicationId") int applicationId) {
+        return dbService.getResultExists(applicationId)
+                .thenApply(exists -> exists ? "True" : "False");
+    }    
+
+
     @GetMapping("/solution/{applicationId}")
     public CompletableFuture<double[]> getSolutionByApplicationId(@PathVariable("applicationId") int applicationId) {
         return dbService.getSolutionByApplicationId(applicationId)

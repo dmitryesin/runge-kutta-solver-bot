@@ -202,6 +202,34 @@ async def get_application_status(application_id):
             return await response.text()
 
 
+async def get_result_exists(application_id):
+    timeout = ClientTimeout(total=REQUEST_TIMEOUT)
+    async with ClientSession(timeout=timeout) as session:
+        async with session.get(
+            f"{JAVA_SERVER_URL}/results/{application_id}"
+        ) as response:
+            response.raise_for_status()
+            return await response.text()
+
+
+async def wait_for_application_result(application_id):
+    request_limit = REQUEST_TIMEOUT
+    for _ in range(request_limit):
+        try:
+            status = await get_result_exists(application_id)
+            if status == "True":
+                return True
+            elif status == "False":
+                request_limit += 1
+                if request_limit > REQUEST_TIMEOUT * 2:
+                    return False
+            await asyncio.sleep(RETRY_DELAY)
+        except Exception:
+            await asyncio.sleep(RETRY_DELAY)
+    
+    return False
+
+
 async def wait_for_application_completion(application_id):
     request_limit = REQUEST_TIMEOUT
     for _ in range(request_limit):

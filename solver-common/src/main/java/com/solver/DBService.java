@@ -310,6 +310,31 @@ public class DBService {
     }
 
     @Async
+    public CompletableFuture<Boolean> getResultExists(int applicationId) {
+        return CompletableFuture.supplyAsync(() -> {
+            String query = """
+                SELECT EXISTS (
+                    SELECT 1
+                    FROM results
+                    WHERE application_id = ?
+                )
+                """;
+            try (Connection conn = DBConnection.getConnection();
+                 PreparedStatement stmt = conn.prepareStatement(query)) {
+                stmt.setInt(1, applicationId);
+                ResultSet rs = stmt.executeQuery();
+                if (rs.next()) {
+                    return rs.getBoolean(1);
+                } else {
+                    return false;
+                }
+            } catch (SQLException e) {
+                throw new RuntimeException(e);
+            }
+        });
+    }
+
+    @Async
     @Scheduled(cron = "0 */15 * * * *") // Every 15 minutes
     public CompletableFuture<Void> cleanOldApplications() {
         return CompletableFuture.runAsync(() -> {
