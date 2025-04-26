@@ -110,5 +110,61 @@
         "reach_point": "Точка аппроксимации",
         "step_size": "Размер шага",
         "solution": "Решение"
+    },
+    "zh": {
+        "solve": "求解",
+        "solve_over": "重新求解",
+        "solve_history": "求解历史",
+        "settings": "设置",
+
+        "solve_history_menu": "求解历史菜单。请选择选项：",
+        "settings_menu": "设置菜单。请选择选项：",
+        "change_method": "更改数值方法",
+        "change_rounding": "更改舍入方式",
+        "change_language": "更改语言",
+        "without_rounding": "无舍入",
+
+        "back": "\u2039 返回",
+        "menu": "\u2039 菜单",
+
+        "enter_equation": "输入微分方程。",
+        "enter_x": "输入x的初始值。",
+        "enter_y": "输入y的初始值。",
+        "enter_y_multiple": "输入以空格分隔的y初始值。",
+        "enter_reach_point": "输入近似点。",
+        "enter_step_size": "输入步长。",
+
+        "equation_error": "方程不正确。",
+        "symbols_error": "方程包含无效符号：",
+        "parentheses_error": "方程括号未闭合或括号内无内容。",
+        "invalid_initial_x": "无效的x初始值。",
+        "invalid_initial_y": "无效的y初始值：",
+        "invalid_initial_y_count1": "初始y值数量无效：",
+        "invalid_initial_y_count2": "应为：",
+        "invalid_reach_point": "无效的近似点。",
+        "invalid_step_size": "无效的步长值。",
+
+        "processing": "正在处理您的请求...",
+        "processing_longer": "处理时间可能较长，请稍候...",
+        "processing_error": "处理请求时出错。",
+        "data_error": "输入数据不正确。",
+        "server_error": "服务器错误。",
+        "try_again": "请重试。",
+        "application_not_found": "未找到任务。",
+        "error_displaying_application": "显示任务详情时出错。",
+        "cancel": "操作已取消。",
+
+        "method_euler": "欧拉法",
+        "method_modified_euler": "改进欧拉法",
+        "method_runge_kutta": "龙格-库塔法",
+        "method_dormand_prince": "多曼德-普林斯法",
+
+        "method": "方法",
+        "equation": "方程",
+        "initial_x": "初始X",
+        "initial_y": "初始Y",
+        "reach_point": "近似点",
+        "step_size": "步长",
+        "solution": "解"
     }
 }

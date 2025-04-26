@@ -95,15 +95,20 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         ]
     ]
 
-    with open(PY_DIR + "assets/texts/START_EN.txt", "r", encoding="utf-8") as file:
-        start_en = file.read()
+    texts = {}
+    for lang_code in ["en", "ru", "zh"]:
+        with open(
+            f"{PY_DIR}assets/texts/START_{lang_code.upper()}.txt",
+            "r",
+            encoding="utf-8"
+        ) as file:
+            texts[lang_code] = file.read()
 
-    with open(PY_DIR + "assets/texts/START_RU.txt", "r", encoding="utf-8") as file:
-        start_ru = file.read()
+    text_to_send = texts.get(current_language, texts["en"])
 
     if update.message:
         await update.message.reply_text(
-            start_en if current_language == "en" else start_ru,
+            text_to_send,
             reply_markup=InlineKeyboardMarkup(keyboard),
             parse_mode="HTML"
         )
@@ -112,16 +117,17 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await query.answer()
         if query.message and query.message.text:
             await query.edit_message_text(
-                start_en if current_language == "en" else start_ru,
+                text_to_send,
                 reply_markup=InlineKeyboardMarkup(keyboard),
                 parse_mode="HTML"
             )
         else:
             await query.message.reply_text(
-                start_en if current_language == "en" else start_ru,
+                text_to_send,
                 reply_markup=InlineKeyboardMarkup(keyboard),
                 parse_mode="HTML"
             )
+
 
     return MENU
 
@@ -315,6 +321,10 @@ async def settings_language(update: Update, context: ContextTypes.DEFAULT_TYPE):
             "→ Русский ←", callback_data="ru") 
             if current_language == "ru" else InlineKeyboardButton(
                 "Русский", callback_data="ru")],
+        [InlineKeyboardButton(
+            "→ 中文 ←", callback_data="zh") 
+            if current_language == "zh" else InlineKeyboardButton(
+                "中文", callback_data="zh")],
         [InlineKeyboardButton(
             LANG_TEXTS[current_language]["back"],
             callback_data="settings_back")]
@@ -896,7 +906,7 @@ def main() -> None:
                     pattern="^method_(euler|modified_euler|runge_kutta|dormand_prince)$"
                 ),
                 CallbackQueryHandler(rounding, pattern="^(4|6|8|16)$"),
-                CallbackQueryHandler(language, pattern="^(en|ru)$")
+                CallbackQueryHandler(language, pattern="^(en|ru|zh)$")
             ],
             EQUATION: [MessageHandler(filters.TEXT & ~filters.COMMAND, equation)],
             INITIAL_X: [MessageHandler(filters.TEXT & ~filters.COMMAND, initial_x)],
