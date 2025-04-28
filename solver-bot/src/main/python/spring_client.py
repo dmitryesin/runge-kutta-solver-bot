@@ -9,6 +9,7 @@ JAVA_SERVER_URL = "http://localhost:8080/api/solver"
 REQUEST_TIMEOUT = 60 
 MAX_RETRIES = 3
 RETRY_DELAY = 1
+MAX_DELAY = 10
 
 async def set_parameters(
     user_id, method, order, user_equation, formatted_equation,
@@ -214,6 +215,8 @@ async def get_result_exists(application_id):
 
 async def wait_for_application_result(application_id):
     request_limit = REQUEST_TIMEOUT
+    current_delay = RETRY_DELAY
+
     for _ in range(request_limit):
         try:
             status = await get_result_exists(application_id)
@@ -221,17 +224,20 @@ async def wait_for_application_result(application_id):
                 return True
             elif status == "False":
                 request_limit += 1
+                current_delay = min(current_delay * 1.5, MAX_DELAY)
                 if request_limit > REQUEST_TIMEOUT * 2:
                     return False
-            await asyncio.sleep(RETRY_DELAY)
+            await asyncio.sleep(current_delay)
         except Exception:
-            await asyncio.sleep(RETRY_DELAY)
-    
+            await asyncio.sleep(current_delay)
+
     return False
 
 
 async def wait_for_application_completion(application_id):
     request_limit = REQUEST_TIMEOUT
+    current_delay = RETRY_DELAY
+
     for _ in range(request_limit):
         try:
             status = await get_application_status(application_id)
@@ -239,12 +245,13 @@ async def wait_for_application_completion(application_id):
                 return True
             elif status == "in_progress":
                 request_limit += 1
+                current_delay = min(current_delay * 1.5, MAX_DELAY)
                 if request_limit > REQUEST_TIMEOUT * 2:
                     return False
             elif status == "error":
                 return False
-            await asyncio.sleep(RETRY_DELAY)
+            await asyncio.sleep(current_delay)
         except Exception:
-            await asyncio.sleep(RETRY_DELAY)
-    
+            await asyncio.sleep(current_delay)
+
     return False
