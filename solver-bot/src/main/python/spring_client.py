@@ -6,7 +6,7 @@ from aiohttp import ClientError, ClientTimeout, ClientSession
 from equation.function_replacer import replace_math_functions
 
 JAVA_SERVER_URL = "http://localhost:8080/api/solver"
-REQUEST_TIMEOUT = 60 
+REQUEST_TIMEOUT = 60
 MAX_RETRIES = 3
 RETRY_DELAY = 1
 MAX_DELAY = 10
@@ -81,15 +81,12 @@ async def get_user_settings(user_id, language, rounding, method):
                 }
 
             response.raise_for_status()
-            content_type = response.headers.get('Content-Type', '')
-            if 'application/json' in content_type:
-                return await response.json()
-            else:
-                text = await response.text()
-                try:
-                    return json.loads(text)
-                except json.JSONDecodeError:
-                    return text
+            text = await response.text()
+            try:
+                data = json.loads(text)
+            except json.JSONDecodeError:
+                return text
+            return data
 
 
 async def get_recent_applications(user_id):
@@ -100,16 +97,13 @@ async def get_recent_applications(user_id):
         ) as response:
             if response.status == 500:
                 return []
+
             response.raise_for_status()
-            content_type = response.headers.get('Content-Type', '')
-            if 'application/json' in content_type:
-                data = await response.json()
-            else:
-                text = await response.text()
-                try:
-                    data = json.loads(text)
-                except json.JSONDecodeError:
-                    return []
+            text = await response.text()
+            try:
+                data = json.loads(text)
+            except json.JSONDecodeError:
+                return []
 
             valid_statuses = {"new", "in_progress", "completed"}
 
@@ -142,16 +136,15 @@ async def get_solution(application_id):
         async with session.get(
             f"{JAVA_SERVER_URL}/results/{application_id}/solution"
         ) as response:
+            if response.status == 500:
+                return []
+
             response.raise_for_status()
-            content_type = response.headers.get('Content-Type', '')
-            if 'application/json' in content_type:
-                data = await response.json()
-            else:
-                text = await response.text()
-                try:
-                    data = json.loads(text)
-                except json.JSONDecodeError:
-                    raise ValueError(f"Failed to parse solution data: {text}")
+            text = await response.text()
+            try:
+                data = json.loads(text)
+            except json.JSONDecodeError:
+                raise ValueError(f"Failed to parse solution data: {text}")
             return np.array(data)
 
 
@@ -161,16 +154,15 @@ async def get_x_values(application_id):
         async with session.get(
             f"{JAVA_SERVER_URL}/results/{application_id}/xvalues"
         ) as response:
+            if response.status == 500:
+                return []
+
             response.raise_for_status()
-            content_type = response.headers.get('Content-Type', '')
-            if 'application/json' in content_type:
-                data = await response.json()
-            else:
-                text = await response.text()
-                try:
-                    data = json.loads(text)
-                except json.JSONDecodeError:
-                    raise ValueError(f"Failed to parse x-values data: {text}")
+            text = await response.text()
+            try:
+                data = json.loads(text)
+            except json.JSONDecodeError:
+                raise ValueError(f"Failed to parse x-values data: {text}")
             return np.array(data)
 
 
@@ -180,16 +172,15 @@ async def get_y_values(application_id):
         async with session.get(
             f"{JAVA_SERVER_URL}/results/{application_id}/yvalues"
         ) as response:
+            if response.status == 500:
+                return []
+
             response.raise_for_status()
-            content_type = response.headers.get('Content-Type', '')
-            if 'application/json' in content_type:
-                data = await response.json()
-            else:
-                text = await response.text()
-                try:
-                    data = json.loads(text)
-                except json.JSONDecodeError:
-                    raise ValueError(f"Failed to parse y-values data: {text}")
+            text = await response.text()
+            try:
+                data = json.loads(text)
+            except json.JSONDecodeError:
+                raise ValueError(f"Failed to parse y-values data: {text}")
             return np.array(data)
 
 
