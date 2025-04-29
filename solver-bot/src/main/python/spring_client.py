@@ -214,19 +214,15 @@ async def get_result_exists(application_id):
 
 
 async def wait_for_application_result(application_id):
-    request_limit = REQUEST_TIMEOUT
     current_delay = RETRY_DELAY
 
-    for _ in range(request_limit):
+    for _ in range(REQUEST_TIMEOUT):
         try:
             status = await get_result_exists(application_id)
             if status == "True":
                 return True
             elif status == "False":
-                request_limit += 1
                 current_delay = min(current_delay * 1.5, MAX_DELAY)
-                if request_limit > REQUEST_TIMEOUT * 2:
-                    return False
             await asyncio.sleep(current_delay)
         except Exception:
             await asyncio.sleep(current_delay)
@@ -235,19 +231,15 @@ async def wait_for_application_result(application_id):
 
 
 async def wait_for_application_completion(application_id):
-    request_limit = REQUEST_TIMEOUT
     current_delay = RETRY_DELAY
 
-    for _ in range(request_limit):
+    for _ in range(REQUEST_TIMEOUT):
         try:
             status = await get_application_status(application_id)
             if status == "completed":
                 return True
             elif status == "in_progress":
-                request_limit += 1
                 current_delay = min(current_delay * 1.5, MAX_DELAY)
-                if request_limit > REQUEST_TIMEOUT * 2:
-                    return False
             elif status == "error":
                 return False
             await asyncio.sleep(current_delay)
