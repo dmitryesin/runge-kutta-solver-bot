@@ -1,23 +1,31 @@
 package com.solver;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataAccessException;
+import org.springframework.dao.EmptyResultDataAccessException;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.core.JsonProcessingException;
+import org.springframework.transaction.annotation.Transactional;
 
-import java.sql.*;
 import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 @Service
 public class DBService {
 
+    @Autowired
+    private JdbcTemplate jdbcTemplate;
+
     @Async
+    @Transactional
     public CompletableFuture<Optional<String>> getUserSettingsById(Integer userId) {
         return CompletableFuture.supplyAsync(() -> {
             String query = """
@@ -25,11 +33,9 @@ public class DBService {
                 FROM users
                 WHERE id = ?
                 """;
-            try (Connection conn = DBConnection.getConnection();
-                 PreparedStatement stmt = conn.prepareStatement(query)) {
-                stmt.setInt(1, userId);
-                ResultSet rs = stmt.executeQuery();
-                if (rs.next()) {
+            
+            try {
+                return jdbcTemplate.queryForObject(query, (rs, rowNum) -> {
                     String language = rs.getString("language");
                     String rounding = rs.getString("rounding");
                     String method = rs.getString("method");
@@ -39,16 +45,17 @@ public class DBService {
                             language,
                             rounding,
                             method));
-                } else {
-                    return Optional.empty();
-                }
-            } catch (SQLException e) {
+                }, userId);
+            } catch (EmptyResultDataAccessException e) {
+                return Optional.empty();
+            } catch (DataAccessException e) {
                 throw new RuntimeException(e);
             }
         });
     }
 
     @Async
+    @Transactional
     public CompletableFuture<Optional<String>> setUserSettingsById(Integer userId, String language, String rounding, String method) {
         return CompletableFuture.supplyAsync(() -> {
             String query = """
@@ -59,21 +66,20 @@ public class DBService {
                     rounding = EXCLUDED.rounding,
                     method = EXCLUDED.method
                 """;
-            try (Connection conn = DBConnection.getConnection();
-                 PreparedStatement stmt = conn.prepareStatement(query)) {
-                stmt.setInt(1, userId);
-                stmt.setString(2, language);
-                stmt.setString(3, rounding);
-                stmt.setString(4, method);
-                int rowsAffected = stmt.executeUpdate();
-                return rowsAffected > 0 ? Optional.of("Settings saved successfully") : Optional.empty();
-            } catch (SQLException e) {
+            
+            try {
+                int rowsAffected = jdbcTemplate.update(query, userId, language, rounding, method);
+                return rowsAffected > 0 
+                    ? Optional.of("Settings saved successfully") 
+                    : Optional.empty();
+            } catch (DataAccessException e) {
                 throw new RuntimeException(e);
             }
         });
     }
 
     @Async
+    @Transactional
     public CompletableFuture<Integer> createApplication(String parameters, String status) {
         return CompletableFuture.supplyAsync(() -> {
             String query = """
@@ -81,24 +87,23 @@ public class DBService {
                 VALUES (?, ?::jsonb, ?)
                 RETURNING id
                 """;
-            try (Connection conn = DBConnection.getConnection();
-                 PreparedStatement stmt = conn.prepareStatement(query)) {
-                stmt.setNull(1, java.sql.Types.INTEGER);
-                stmt.setString(2, parameters);
-                stmt.setString(3, status);
-                ResultSet rs = stmt.executeQuery();
-                if (rs.next()) {
-                    return rs.getInt(1);
-                } else {
-                    throw new SQLException("Failed to create application");
-                }
-            } catch (SQLException e) {
-                throw new RuntimeException(e);
+            
+            try {
+                return jdbcTemplate.queryForObject(
+                    query,
+                    (rs, rowNum) -> rs.getInt("id"),
+                    null,
+                    parameters,
+                    status
+                );
+            } catch (DataAccessException e) {
+                throw new RuntimeException("Failed to create application", e);
             }
         });
     }
 
     @Async
+    @Transactional
     public CompletableFuture<Integer> createApplicationWithUserId(String parameters, String status, Integer userId) {
         return CompletableFuture.supplyAsync(() -> {
             String query = """
@@ -106,24 +111,22 @@ public class DBService {
                 VALUES (?, ?::jsonb, ?)
                 RETURNING id
                 """;
-            try (Connection conn = DBConnection.getConnection();
-                 PreparedStatement stmt = conn.prepareStatement(query)) {
-                stmt.setInt(1, userId);
-                stmt.setString(2, parameters);
-                stmt.setString(3, status);
-                ResultSet rs = stmt.executeQuery();
-                if (rs.next()) {
-                    return rs.getInt(1);
-                } else {
-                    throw new SQLException("Failed to create application");
-                }
-            } catch (SQLException e) {
-                throw new RuntimeException(e);
+            try {
+                return jdbcTemplate.queryForObject(
+                    query,
+                    (rs, rowNum) -> rs.getInt("id"),
+                    userId,
+                    parameters,
+                    status
+                );
+            } catch (DataAccessException e) {
+                throw new RuntimeException("Failed to create application", e);
             }
         });
     }
 
     @Async
+    @Transactional
     public CompletableFuture<List<Map<String, Object>>> getApplicationsByUserId(Integer userId) {
         return CompletableFuture.supplyAsync(() -> {
             String query = """
@@ -132,28 +135,24 @@ public class DBService {
                 WHERE user_id = ?
                 ORDER BY created_at DESC
                 """;
-            try (Connection conn = DBConnection.getConnection();
-                 PreparedStatement stmt = conn.prepareStatement(query)) {
-                stmt.setInt(1, userId);
-                ResultSet rs = stmt.executeQuery();
-                List<Map<String, Object>> applications = new ArrayList<>();
-                while (rs.next()) {
+            try {
+                return jdbcTemplate.query(query, (rs, rowNum) -> {
                     Map<String, Object> application = new HashMap<>();
                     application.put("id", rs.getInt("id"));
                     application.put("parameters", rs.getString("parameters"));
                     application.put("status", rs.getString("status"));
                     application.put("created_at", rs.getString("created_at"));
                     application.put("last_updated_at", rs.getString("last_updated_at"));
-                    applications.add(application);
-                }
-                return applications;
-            } catch (SQLException e) {
+                    return application;
+                }, userId);
+            } catch (DataAccessException e) {
                 throw new RuntimeException(e);
             }
         });
     }
 
     @Async
+    @Transactional
     public CompletableFuture<Optional<List<Double>>> getXValuesByApplicationId(int applicationId) {
         return CompletableFuture.supplyAsync(() -> {
             String query = """
@@ -161,22 +160,17 @@ public class DBService {
                 FROM results
                 WHERE application_id = ?
                 """;
-            try (Connection conn = DBConnection.getConnection();
-                 PreparedStatement stmt = conn.prepareStatement(query)) {
-                stmt.setInt(1, applicationId);
-                ResultSet rs = stmt.executeQuery();
-                List<Double> xValues = new ArrayList<>();
-                while (rs.next()) {
-                    xValues.add(rs.getDouble("x_value"));
-                }
+            try {
+                List<Double> xValues = jdbcTemplate.queryForList(query, Double.class, applicationId);
                 return xValues.isEmpty() ? Optional.empty() : Optional.of(xValues);
-            } catch (SQLException e) {
+            } catch (DataAccessException e) {
                 throw new RuntimeException(e);
             }
         });
     }
 
     @Async
+    @Transactional
     public CompletableFuture<Optional<List<double[]>>> getYValuesByApplicationId(int applicationId) {
         return CompletableFuture.supplyAsync(() -> {
             String query = """
@@ -184,24 +178,26 @@ public class DBService {
                 FROM results
                 WHERE application_id = ?
                 """;
-            try (Connection conn = DBConnection.getConnection();
-                 PreparedStatement stmt = conn.prepareStatement(query)) {
-                stmt.setInt(1, applicationId);
-                ResultSet rs = stmt.executeQuery();
-                List<double[]> yValues = new ArrayList<>();
-                ObjectMapper objectMapper = new ObjectMapper();
-                while (rs.next()) {
-                    String yValueJson = rs.getString("y_value");
-                    yValues.add(objectMapper.readValue(yValueJson, double[].class));
+            try {
+                List<String> yValuesJson = jdbcTemplate.queryForList(query, String.class, applicationId);
+                if (yValuesJson.isEmpty()) {
+                    return Optional.empty();
                 }
-                return yValues.isEmpty() ? Optional.empty() : Optional.of(yValues);
-            } catch (SQLException | JsonProcessingException e) {
+                
+                ObjectMapper objectMapper = new ObjectMapper();
+                List<double[]> yValues = new ArrayList<>();
+                for (String json : yValuesJson) {
+                    yValues.add(objectMapper.readValue(json, double[].class));
+                }
+                return Optional.of(yValues);
+            } catch (DataAccessException | JsonProcessingException e) {
                 throw new RuntimeException(e);
             }
         });
     }
 
     @Async
+    @Transactional
     public CompletableFuture<Optional<double[]>> getSolutionByApplicationId(int applicationId) {
         return CompletableFuture.supplyAsync(() -> {
             String query = """
@@ -209,24 +205,22 @@ public class DBService {
                 FROM results
                 WHERE application_id = ?
                 """;
-            try (Connection conn = DBConnection.getConnection();
-                 PreparedStatement stmt = conn.prepareStatement(query)) {
-                stmt.setInt(1, applicationId);
-                ResultSet rs = stmt.executeQuery();
-                if (rs.next()) {
-                    String solutionJson = rs.getString("solution");
-                    ObjectMapper objectMapper = new ObjectMapper();
-                    return Optional.of(objectMapper.readValue(solutionJson, double[].class));
-                } else {
+            try {
+                List<String> solutions = jdbcTemplate.queryForList(query, String.class, applicationId);
+                if (solutions.isEmpty()) {
                     return Optional.empty();
                 }
-            } catch (SQLException | JsonProcessingException e) {
+                
+                ObjectMapper objectMapper = new ObjectMapper();
+                return Optional.of(objectMapper.readValue(solutions.get(0), double[].class));
+            } catch (DataAccessException | JsonProcessingException e) {
                 throw new RuntimeException(e);
             }
         });
     }
 
     @Async
+    @Transactional
     public CompletableFuture<Optional<String>> getApplicationStatusByApplicationId(int applicationId) {
         return CompletableFuture.supplyAsync(() -> {
             String query = """
@@ -234,22 +228,17 @@ public class DBService {
                 FROM applications
                 WHERE id = ?
                 """;
-            try (Connection conn = DBConnection.getConnection();
-                 PreparedStatement stmt = conn.prepareStatement(query)) {
-                stmt.setInt(1, applicationId);
-                ResultSet rs = stmt.executeQuery();
-                if (rs.next()) {
-                    return Optional.of(rs.getString("status"));
-                } else {
-                    return Optional.empty();
-                }
-            } catch (SQLException e) {
+            try {
+                List<String> statuses = jdbcTemplate.queryForList(query, String.class, applicationId);
+                return statuses.isEmpty() ? Optional.empty() : Optional.of(statuses.get(0));
+            } catch (DataAccessException e) {
                 throw new RuntimeException(e);
             }
         });
     }
 
     @Async
+    @Transactional
     public CompletableFuture<Void> updateApplicationStatus(int applicationId, String status) {
         return CompletableFuture.runAsync(() -> {
             String query = """
@@ -257,55 +246,25 @@ public class DBService {
                 SET status = ?, last_updated_at = NOW()
                 WHERE id = ?
                 """;
-            try (Connection conn = DBConnection.getConnection();
-                 PreparedStatement stmt = conn.prepareStatement(query)) {
-                stmt.setString(1, status);
-                stmt.setInt(2, applicationId);
-                stmt.executeUpdate();
-            } catch (SQLException e) {
+            try {
+                jdbcTemplate.update(query, status, applicationId);
+            } catch (DataAccessException e) {
                 throw new RuntimeException(e);
             }
         });
     }
 
     @Async
+    @Transactional
     public CompletableFuture<Void> saveResults(int applicationId, String results) {
         return CompletableFuture.runAsync(() -> {
             String query = """
                 INSERT INTO results (application_id, data)
                 VALUES (?, ?::jsonb)
                 """;
-            try (Connection conn = DBConnection.getConnection();
-                 PreparedStatement stmt = conn.prepareStatement(query)) {
-                stmt.setInt(1, applicationId);
-                stmt.setString(2, results);
-                stmt.executeUpdate();
-            } catch (SQLException e) {
-                throw new RuntimeException(e);
-            }
-        });
-    }
-
-    @Async
-    public CompletableFuture<Boolean> getResultExists(int applicationId) {
-        return CompletableFuture.supplyAsync(() -> {
-            String query = """
-                SELECT EXISTS (
-                    SELECT 1
-                    FROM results
-                    WHERE application_id = ?
-                )
-                """;
-            try (Connection conn = DBConnection.getConnection();
-                 PreparedStatement stmt = conn.prepareStatement(query)) {
-                stmt.setInt(1, applicationId);
-                ResultSet rs = stmt.executeQuery();
-                if (rs.next()) {
-                    return rs.getBoolean(1);
-                } else {
-                    return false;
-                }
-            } catch (SQLException e) {
+            try {
+                jdbcTemplate.update(query, applicationId, results);
+            } catch (DataAccessException e) {
                 throw new RuntimeException(e);
             }
         });
@@ -313,6 +272,7 @@ public class DBService {
 
     @Async
     @Scheduled(cron = "0 */15 * * * *") // Every 15 minutes
+    @Transactional
     public CompletableFuture<Void> cleanOldApplications() {
         return CompletableFuture.runAsync(() -> {
             String query = """
@@ -328,13 +288,13 @@ public class DBService {
                     AND created_at < NOW() - INTERVAL '14 days'
                 )
                 DELETE FROM applications
-                WHERE id IN (SELECT id FROM to_delete);
+                WHERE id IN (SELECT id FROM to_delete)
                 """;
-            try (Connection conn = DBConnection.getConnection();
-                 PreparedStatement stmt = conn.prepareStatement(query)) {
-                stmt.executeUpdate();
-            } catch (SQLException e) {
-                throw new RuntimeException(e);
+            
+            try {
+                jdbcTemplate.update(query);
+            } catch (DataAccessException e) {
+                throw new RuntimeException("Failed to clean old applications", e);
             }
         });
     }

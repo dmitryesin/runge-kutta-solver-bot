@@ -3,8 +3,8 @@ package com.solver;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -143,13 +143,6 @@ public class SolverController {
                     return applications;
                 });
     }
-
-    @GetMapping("/results/{applicationId}")
-    public CompletableFuture<String> getResultExists(@PathVariable("applicationId") int applicationId) {
-        return dbService.getResultExists(applicationId)
-                .thenApply(exists -> exists ? "True" : "False");
-    }    
-
 
     @GetMapping("/results/{applicationId}/solution")
     public CompletableFuture<double[]> getSolutionByApplicationId(@PathVariable("applicationId") int applicationId) {
