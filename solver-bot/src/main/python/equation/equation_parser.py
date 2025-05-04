@@ -1,6 +1,8 @@
 import re
 import sympy as sp
 
+from equation.function_replacer import replace_math_functions
+
 def get_equation_order(eq):
     derivatives = list(eq.lhs.atoms(sp.Derivative))
     if not derivatives:
@@ -51,7 +53,7 @@ def format_equation(eq):
         equation, y, x = parse_equation(eq.lower())
         last_equation, order = convert_to_first_order(equation, y, x)
 
-        return str(last_equation.rhs).replace("**", "^"), order
+        return replace_math_functions(str(last_equation.rhs).replace("**", "^")), order
 
     except (sp.SympifyError, TypeError, AttributeError, ValueError):
         return None, None
