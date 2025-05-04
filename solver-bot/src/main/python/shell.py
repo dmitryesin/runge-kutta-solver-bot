@@ -11,7 +11,6 @@ from spring_client import (
     get_y_values,
     get_solution,
     get_recent_applications,
-    wait_for_application_result,
     wait_for_application_completion)
 from equation.equation_parser import format_equation
 from equation.equation_validator import (
@@ -764,32 +763,10 @@ async def solution(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 reply_markup=new_reply_markup
             )
             return MENU
-        
-        is_result_exists = await wait_for_application_result(application_id)
 
-        if not is_result_exists:
-            logger.error("Result for application %s does not exist", application_id)
-            await save_user_settings(context)
-            await processing_message.edit_text(
-                LANG_TEXTS[current_language]["processing_error"] + " " +
-                LANG_TEXTS[current_language]["try_again"],
-                reply_markup=new_reply_markup
-            )
-            return MENU
-
-        try:
-            result = await get_solution(application_id)
-            x_values = await get_x_values(application_id)
-            y_values = await get_y_values(application_id)
-        except Exception as e:
-            logger.error("Error while getting Java parameters: %s", e)
-            await save_user_settings(context)
-            await processing_message.edit_text(
-                LANG_TEXTS[current_language]["server_error"] + " " +
-                LANG_TEXTS[current_language]["try_again"],
-                reply_markup=new_reply_markup
-            )
-            return MENU
+        result = await get_solution(application_id)
+        x_values = await get_x_values(application_id)
+        y_values = await get_y_values(application_id)
 
         await processing_message.delete()
 

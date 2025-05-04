@@ -204,23 +204,6 @@ async def get_result_exists(application_id):
             return await response.text()
 
 
-async def wait_for_application_result(application_id):
-    current_delay = RETRY_DELAY
-
-    for _ in range(REQUEST_TIMEOUT):
-        try:
-            status = await get_result_exists(application_id)
-            if status == "True":
-                return True
-            elif status == "False":
-                current_delay = min(current_delay * 1.5, MAX_DELAY)
-            await asyncio.sleep(current_delay)
-        except Exception:
-            await asyncio.sleep(current_delay)
-
-    return False
-
-
 async def wait_for_application_completion(application_id):
     current_delay = RETRY_DELAY
 
