@@ -52,8 +52,8 @@ def format_equation(eq):
     try:
         equation, y, x = parse_equation(eq.lower())
         last_equation, order = convert_to_first_order(equation, y, x)
-
-        return replace_math_functions(str(last_equation.rhs).replace("**", "^")), order
-
+        rhs_str = str(last_equation.rhs).replace("**", "^")
+        rhs_str = replace_math_functions(rhs_str)
+        return rhs_str, order
     except (sp.SympifyError, TypeError, AttributeError, ValueError):
         return None, None
