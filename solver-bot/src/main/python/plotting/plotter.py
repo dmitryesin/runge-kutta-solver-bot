@@ -1,6 +1,8 @@
 import io
 import matplotlib.pyplot as plt
 
+from printing.printer import get_variable_name
+
 def plot_solution(x_values, y_values, order):
     plt.clf()
 
@@ -8,14 +10,7 @@ def plot_solution(x_values, y_values, order):
 
     plt.grid(True)
 
-    superscripts = "⁰¹²³⁴⁵⁶⁷⁸⁹"
-
-    def get_variable_name(i):
-        if i < 4:
-            return f"y{chr(39) * i}"
-        return f"y{"⁽"}{''.join(superscripts[int(d)] for d in str(i))}{"⁾"}"
-
-    variable_names = ["y"] + [get_variable_name(i) for i in range(1, int(order))]
+    variable_names = ["y"] + [get_variable_name(i) for i in range(1, order)]
 
     plt.plot(x_values, y_values, label=variable_names)
 
