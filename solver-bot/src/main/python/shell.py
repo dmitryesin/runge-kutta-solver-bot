@@ -74,7 +74,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     if current_state in [EQUATION, INITIAL_X, INITIAL_Y, REACH_POINT, STEP_SIZE]:
         user = update.message.from_user
-        logger.info("User %s canceled solving.", user.id)
+        logger.info("User %s canceled solving", user.id)
 
         await save_user_settings(context)
 
@@ -498,6 +498,7 @@ async def solve(update: Update, context: ContextTypes.DEFAULT_TYPE):
     current_rounding = context.user_data.get('rounding', DEFAULT_ROUNDING)
     current_language = context.user_data.get('language', DEFAULT_LANGUAGE)
 
+    logger.info("User %s started solving", user.id)
     logger.info("Method of %s: %s", user.id, current_method)
     logger.info("Rounding of %s: %s", user.id, current_rounding)
 
@@ -538,7 +539,7 @@ async def equation(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return EQUATION
 
     if not validate_parentheses(update.message.text):
-        logger.info("User %s used incorrect parentheses.", user.id)
+        logger.info("User %s used incorrect parentheses", user.id)
         await update.message.reply_text(
             LANG_TEXTS[current_language]["parentheses_error"] + " " +
             LANG_TEXTS[current_language]["try_again"]
@@ -548,7 +549,7 @@ async def equation(update: Update, context: ContextTypes.DEFAULT_TYPE):
     formatted_equation, order = format_equation(update.message.text)
 
     if formatted_equation is None or order is None or order == 0:
-        logger.info("User %s used unsupported symbols.", user.id)
+        logger.info("User %s used unsupported symbols", user.id)
         await update.message.reply_text(
             LANG_TEXTS[current_language]["equation_error"] + " " +
             LANG_TEXTS[current_language]["try_again"]
@@ -725,56 +726,52 @@ async def solution(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     new_reply_markup = InlineKeyboardMarkup(keyboard)
 
-    try:
-        processing_message = await update.message.reply_text(
-            LANG_TEXTS[current_language]["processing"]
-        )
-        
-        try:
-            application_id = await set_parameters(
-                user_id=user.id,
-                method=context.user_data['method'],
-                order=context.user_data['order'],
-                user_equation=context.user_data['user_equation'],
-                formatted_equation=context.user_data['formatted_equation'],
-                initial_x=context.user_data['initial_x'],
-                initial_y=context.user_data['initial_y'],
-                reach_point=context.user_data['reach_point'],
-                step_size=context.user_data['step_size']
-            )
-        except Exception as e:
-            logger.error("Error while setting Java parameters: %s", e)
-            await save_user_settings(context)
-            await processing_message.edit_text(
-                LANG_TEXTS[current_language]["server_error"] + " " +
-                LANG_TEXTS[current_language]["try_again"],
-                reply_markup=new_reply_markup
-            )
-            return MENU
-        
-        is_completed = await wait_for_application_completion(application_id)
-        
-        if not is_completed:
-            logger.error("Application %s did not complete successfully", application_id)
-            await save_user_settings(context)
-            await processing_message.edit_text(
-                LANG_TEXTS[current_language]["processing_error"] + " " +
-                LANG_TEXTS[current_language]["try_again"],
-                reply_markup=new_reply_markup
-            )
-            return MENU
+    processing_message = await update.message.reply_text(
+        LANG_TEXTS[current_language]["processing"]
+    )
 
+    try:
+        application_id = await set_parameters(
+            user_id=user.id,
+            method=context.user_data['method'],
+            order=context.user_data['order'],
+            user_equation=context.user_data['user_equation'],
+            formatted_equation=context.user_data['formatted_equation'],
+            initial_x=context.user_data['initial_x'],
+            initial_y=context.user_data['initial_y'],
+            reach_point=context.user_data['reach_point'],
+            step_size=context.user_data['step_size']
+        )
+    except Exception as e:
+        logger.error("Error while setting Java parameters: %s", e)
+        await save_user_settings(context)
+        await processing_message.edit_text(
+            LANG_TEXTS[current_language]["server_error"] + " " +
+            LANG_TEXTS[current_language]["try_again"],
+            reply_markup=new_reply_markup
+        )
+        return MENU
+
+    is_completed = await wait_for_application_completion(application_id)
+
+    if not is_completed:
+        logger.error("Application %s did not complete successfully", application_id)
+        await save_user_settings(context)
+        await processing_message.edit_text(
+            LANG_TEXTS[current_language]["processing_error"] + " " +
+            LANG_TEXTS[current_language]["try_again"],
+            reply_markup=new_reply_markup
+        )
+        return MENU
+
+    try:
         result = await get_solution(application_id)
         x_values = await get_x_values(application_id)
         y_values = await get_y_values(application_id)
-
-        await processing_message.delete()
-
-    except Exception as e:
-        logger.error("Error while setting/getting Java parameters: %s", e)
+    except Exception:
+        logger.error("Error while getting solution for application %s", application_id)
         await save_user_settings(context)
-        await processing_message.delete()
-        await update.message.reply_text(
+        await processing_message.edit_text(
             LANG_TEXTS[current_language]["server_error"] + " " +
             LANG_TEXTS[current_language]["try_again"],
             reply_markup=new_reply_markup
@@ -782,9 +779,9 @@ async def solution(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return MENU
 
     if result is None:
-        logger.info("User %s used unsupported symbols.", user.id)
+        logger.info("User %s used unsupported symbols", user.id)
         await save_user_settings(context)
-        await update.message.reply_text(
+        await processing_message.edit_text(
             LANG_TEXTS[current_language]["data_error"] + " " +
             LANG_TEXTS[current_language]["try_again"],
             reply_markup=new_reply_markup
@@ -805,11 +802,11 @@ async def solution(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     logger.info("Result of %s: %s", user.id, print_result)
 
-    await update.message.reply_photo(
-        photo=plot_graph,
-        caption=print_result,
+    await processing_message.edit_media(
+        media=InputMediaPhoto(plot_graph, caption=print_result),
         reply_markup=new_reply_markup
     )
+
     plot_graph.close()
 
     await save_user_settings(context)
@@ -822,7 +819,7 @@ async def cancel(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     if current_state in [EQUATION, INITIAL_X, INITIAL_Y, REACH_POINT, STEP_SIZE]:
         user = update.message.from_user
-        logger.info("User %s canceled solving.", user.id)
+        logger.info("User %s canceled solving", user.id)
 
         await save_user_settings(context)
 
