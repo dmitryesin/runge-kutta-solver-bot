@@ -1,17 +1,16 @@
 import logging
-import os
 
-LOGS_DIR = "solver-bot/src/main/python/logs/"
+from pathlib import Path
 
-if not os.path.exists(LOGS_DIR):
-    os.makedirs(LOGS_DIR)
+LOGS_DIR = Path("solver-bot/src/main/python/logs/")
+LOGS_DIR.mkdir(parents=True, exist_ok=True)
 
-formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+formatter = logging.Formatter("%(asctime)s - %(levelname)s - %(name)s - %(message)s")
 
 console_handler = logging.StreamHandler()
 console_handler.setFormatter(formatter)
 
-file_handler = logging.FileHandler(LOGS_DIR + "bot.log", encoding='utf-8')
+file_handler = logging.FileHandler(LOGS_DIR / "bot.log", encoding='utf-8')
 file_handler.setFormatter(formatter)
 
 logging.basicConfig(level=logging.INFO, handlers=[console_handler, file_handler])
