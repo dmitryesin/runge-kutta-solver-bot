@@ -57,23 +57,13 @@ public class Main {
         double[] y = initial_y.clone();
 
         while (x < reach_point - 1e-10) {
-            double[] result;
-            switch (method) {
-                case 1:
-                    result = NumericalMethods.methodEuler(equationFunction, x, y, step_size);
-                    break;
-                case 2:
-                    result = NumericalMethods.methodEulerImproved(equationFunction, x, y, step_size);
-                    break;
-                case 4:
-                    result = NumericalMethods.methodRungeKutta(equationFunction, x, y, step_size);
-                    break;
-                case 7:
-                    result = NumericalMethods.methodDormandPrince(equationFunction, x, y, step_size);
-                    break;
-                default:
-                    throw new IllegalArgumentException("Invalid method value: " + method);
-            }
+            double[] result = switch (method) {
+                case 1 -> NumericalMethods.methodEuler(equationFunction, x, y, step_size);
+                case 2 -> NumericalMethods.methodEulerImproved(equationFunction, x, y, step_size);
+                case 4 -> NumericalMethods.methodRungeKutta(equationFunction, x, y, step_size);
+                case 7 -> NumericalMethods.methodDormandPrince(equationFunction, x, y, step_size);
+                default -> throw new IllegalArgumentException("Invalid method value: " + method);
+            };
             x = result[0];
             y = new double[result.length - 1];
             System.arraycopy(result, 1, y, 0, result.length - 1);
