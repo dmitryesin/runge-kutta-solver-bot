@@ -1,6 +1,5 @@
 package com.solver;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.concurrent.CompletableFuture;
@@ -11,11 +10,14 @@ import java.util.Map;
 @RequestMapping("/api/solver")
 public class SolverController {
 
-    @Autowired
-    private Main main;
+    private final Main main;
 
-    @Autowired
-    private DBService dbService;
+    private final DBService dbService;
+
+    public SolverController(Main main, DBService dbService) {
+        this.main = main;
+        this.dbService = dbService;
+    }
 
     @PostMapping("/users/{userId}")
     public CompletableFuture<String> setUserSettingsById(

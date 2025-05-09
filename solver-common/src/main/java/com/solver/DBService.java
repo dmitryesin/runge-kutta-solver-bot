@@ -2,7 +2,6 @@ package com.solver;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -21,8 +20,11 @@ import java.util.Optional;
 @Service
 public class DBService {
 
-    @Autowired
-    private JdbcTemplate jdbcTemplate;
+    private final JdbcTemplate jdbcTemplate;
+
+    public DBService(JdbcTemplate jdbcTemplate) {
+        this.jdbcTemplate = jdbcTemplate;
+    }
 
     @Async
     @Transactional
@@ -212,7 +214,7 @@ public class DBService {
                 }
                 
                 ObjectMapper objectMapper = new ObjectMapper();
-                return Optional.of(objectMapper.readValue(solutions.get(0), double[].class));
+                return Optional.of(objectMapper.readValue(solutions.getFirst(), double[].class));
             } catch (DataAccessException | JsonProcessingException e) {
                 throw new RuntimeException(e);
             }
@@ -230,7 +232,7 @@ public class DBService {
                 """;
             try {
                 List<String> statuses = jdbcTemplate.queryForList(query, String.class, applicationId);
-                return statuses.isEmpty() ? Optional.empty() : Optional.of(statuses.get(0));
+                return statuses.isEmpty() ? Optional.empty() : Optional.of(statuses.getFirst());
             } catch (DataAccessException e) {
                 throw new RuntimeException(e);
             }
