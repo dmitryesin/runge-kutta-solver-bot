@@ -613,17 +613,21 @@ async def initial_y(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user = update.message.from_user
     user_input = update.message.text.strip()
 
-    inputs = user_input.split()
+    if "," in user_input:
+        splitted_user_input = user_input.split(",")
+    else:
+        splitted_user_input = user_input.split()
+
     order = int(context.user_data['order'])
 
     current_language = context.user_data.get('language', DEFAULT_LANGUAGE)
 
     try:
-        [float(value) for value in inputs]
+        [float(value) for value in splitted_user_input]
     except ValueError:
         invalid_value = next(
             (
-                value for value in inputs
+                value for value in splitted_user_input
                 if not value.replace('.', '', 1).replace('-', '', 1).isdigit()
             ),
             None
@@ -637,11 +641,11 @@ async def initial_y(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
         return INITIAL_Y
 
-    if len(inputs) != order:
+    if len(splitted_user_input) != order:
         logger.info("Invalid number of initial y values by %s: %s", user.id, user_input)
         await update.message.reply_text(
             LANG_TEXTS[current_language]["invalid_initial_y_count1"] +
-            f"<b><i>{len(inputs)}</i></b>. " +
+            f"<b><i>{len(splitted_user_input)}</i></b>. " +
             LANG_TEXTS[current_language]["invalid_initial_y_count2"] +
             f"<b><i>{order}</i></b>. " +
             LANG_TEXTS[current_language]["try_again"],
@@ -650,7 +654,7 @@ async def initial_y(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return INITIAL_Y
 
     logger.info("Initial y of %s: %s", user.id, user_input)
-    context.user_data['initial_y'] = user_input
+    context.user_data['initial_y'] = splitted_user_input
     context.user_data['state'] = REACH_POINT
     await update.message.reply_text(
         LANG_TEXTS[current_language]["enter_reach_point"])

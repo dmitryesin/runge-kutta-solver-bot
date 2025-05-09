@@ -18,7 +18,7 @@
         "enter_equation": "Enter the differential equation.",
         "enter_x": "Enter the initial state of x.",
         "enter_y": "Enter the initial state of y.",
-        "enter_y_multiple": "Enter the initial states of y separated by space.",
+        "enter_y_multiple": "Enter the initial states of y.",
         "enter_reach_point": "Enter the approximation point.",
         "enter_step_size": "Enter the step size.",
 
@@ -74,7 +74,7 @@
         "enter_equation": "Введите дифференциальное уравнение.",
         "enter_x": "Введите начальное значение x.",
         "enter_y": "Введите начальное значение y.",
-        "enter_y_multiple": "Введите начальные значения y через пробел.",
+        "enter_y_multiple": "Введите начальные значения y.",
         "enter_reach_point": "Введите точку аппроксимации.",
         "enter_step_size": "Введите размер шага.",
 
@@ -130,7 +130,7 @@
         "enter_equation": "输入微分方程。",
         "enter_x": "输入x的初始值。",
         "enter_y": "输入y的初始值。",
-        "enter_y_multiple": "输入以空格分隔的y初始值。",
+        "enter_y_multiple": "输入y的初始值们。",
         "enter_reach_point": "输入近似点。",
         "enter_step_size": "输入步长。",
 

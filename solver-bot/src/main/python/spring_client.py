@@ -26,9 +26,9 @@ async def set_parameters(
         "method": method_mapping.get(method, 1),
         "order": int(order),
         "userEquation": user_equation,
-        "formattedEquation": replace_math_functions(formatted_equation),
+        "formattedEquation": formatted_equation,
         "initialX": float(initial_x),
-        "initialY": list(map(float, initial_y.split())),
+        "initialY": list(map(float, initial_y)),
         "reachPoint": float(reach_point),
         "stepSize": float(step_size)
     }
