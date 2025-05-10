@@ -1,4 +1,5 @@
 import json
+import telegram
 
 from logger import logger
 from plotting.plotter import plot_solution
@@ -467,11 +468,24 @@ async def solve_history_details(update: Update, context: ContextTypes.DEFAULT_TY
             parse_mode="HTML"
         )
 
-        await query.edit_message_media(
-            media=media,
-            reply_markup=InlineKeyboardMarkup(keyboard)
-        )
-        plot_graph.close()
+        try:
+            await query.edit_message_media(
+                media=media,
+                reply_markup=InlineKeyboardMarkup(keyboard),
+                write_timeout=60,
+                pool_timeout=30
+            )
+        except telegram.error.TimedOut:
+            logger.warning(
+                "Timeout while sending media for user %s, falling back to text only",
+                update.effective_user.id
+            )
+            await query.edit_message_text(
+                details_text,
+                reply_markup=InlineKeyboardMarkup(keyboard)
+            )
+        finally:
+            plot_graph.close()
 
     except Exception as e:
         logger.error(f"Error displaying application details: {e}")
@@ -806,12 +820,21 @@ async def solution(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     logger.info("Result of %s: %s", user.id, print_result)
 
-    await processing_message.edit_media(
-        media=InputMediaPhoto(plot_graph, caption=print_result),
-        reply_markup=new_reply_markup
-    )
-
-    plot_graph.close()
+    try:
+        await processing_message.edit_media(
+            media=InputMediaPhoto(plot_graph, caption=print_result),
+            reply_markup=new_reply_markup,
+            write_timeout=60,
+            pool_timeout=30
+        )
+    except telegram.error.TimedOut:
+        logger.warning("Timeout while sending media for user %s, falling back to text only", user.id)
+        await processing_message.edit_text(
+            print_result,
+            reply_markup=new_reply_markup
+        )
+    finally:
+        plot_graph.close()
 
     await save_user_settings(context)
 
