@@ -2,6 +2,8 @@ package com.solver;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -19,6 +21,7 @@ import java.util.Optional;
 
 @Service
 public class DBService {
+    private static final Logger logger = LoggerFactory.getLogger(DBService.class);
 
     private final JdbcTemplate jdbcTemplate;
 
@@ -29,6 +32,7 @@ public class DBService {
     @Async
     @Transactional
     public CompletableFuture<Optional<String>> getUserSettingsById(Integer userId) {
+        logger.debug("Fetching user settings for userId: {}", userId);
         return CompletableFuture.supplyAsync(() -> {
             String query = """
                 SELECT language, rounding, method
@@ -49,9 +53,11 @@ public class DBService {
                             method));
                 }, userId);
             } catch (EmptyResultDataAccessException e) {
+                logger.debug("No settings found for userId: {}", userId);
                 return Optional.empty();
             } catch (DataAccessException e) {
-                throw new RuntimeException(e);
+                logger.error("Database error while fetching user settings for userId: {}", userId, e);
+                throw new SolverException("Failed to fetch user settings", e);
             }
         });
     }
@@ -59,6 +65,8 @@ public class DBService {
     @Async
     @Transactional
     public CompletableFuture<Optional<String>> setUserSettingsById(Integer userId, String language, String rounding, String method) {
+        logger.debug("Setting user settings for userId: {}, language: {}, rounding: {}, method: {}", 
+            userId, language, rounding, method);
         return CompletableFuture.supplyAsync(() -> {
             String query = """
                 INSERT INTO users (id, language, rounding, method)
@@ -75,7 +83,8 @@ public class DBService {
                     ? Optional.of("Settings saved successfully") 
                     : Optional.empty();
             } catch (DataAccessException e) {
-                throw new RuntimeException(e);
+                logger.error("Database error while setting user settings for userId: {}", userId, e);
+                throw new SolverException("Failed to save user settings", e);
             }
         });
     }
@@ -83,6 +92,7 @@ public class DBService {
     @Async
     @Transactional
     public CompletableFuture<Integer> createApplication(String parameters, String status) {
+        logger.debug("Creating new application with status: {}", status);
         return CompletableFuture.supplyAsync(() -> {
             String query = """
                 INSERT INTO applications (user_id, parameters, status)
@@ -99,7 +109,8 @@ public class DBService {
                     status
                 );
             } catch (DataAccessException e) {
-                throw new RuntimeException("Failed to create application", e);
+                logger.error("Database error while creating application", e);
+                throw new SolverException("Failed to create application", e);
             }
         });
     }
@@ -107,6 +118,7 @@ public class DBService {
     @Async
     @Transactional
     public CompletableFuture<Integer> createApplicationWithUserId(String parameters, String status, Integer userId) {
+        logger.debug("Creating new application for userId: {} with status: {}", userId, status);
         return CompletableFuture.supplyAsync(() -> {
             String query = """
                 INSERT INTO applications (user_id, parameters, status)
@@ -122,7 +134,8 @@ public class DBService {
                     status
                 );
             } catch (DataAccessException e) {
-                throw new RuntimeException("Failed to create application", e);
+                logger.error("Database error while creating application for userId: {}", userId, e);
+                throw new SolverException("Failed to create application", e);
             }
         });
     }
@@ -130,6 +143,7 @@ public class DBService {
     @Async
     @Transactional
     public CompletableFuture<List<Map<String, Object>>> getApplicationsByUserId(Integer userId) {
+        logger.debug("Fetching applications for userId: {}", userId);
         return CompletableFuture.supplyAsync(() -> {
             String query = """
                 SELECT id, parameters, status, created_at, last_updated_at
@@ -148,7 +162,8 @@ public class DBService {
                     return application;
                 }, userId);
             } catch (DataAccessException e) {
-                throw new RuntimeException(e);
+                logger.error("Database error while fetching applications for userId: {}", userId, e);
+                throw new SolverException("Failed to fetch applications", e);
             }
         });
     }
@@ -156,6 +171,7 @@ public class DBService {
     @Async
     @Transactional
     public CompletableFuture<Optional<List<Double>>> getXValuesByApplicationId(int applicationId) {
+        logger.debug("Fetching x values for applicationId: {}", applicationId);
         return CompletableFuture.supplyAsync(() -> {
             String query = """
                 SELECT jsonb_array_elements_text(data->'xvalues')::double precision AS x_value
@@ -166,7 +182,8 @@ public class DBService {
                 List<Double> xValues = jdbcTemplate.queryForList(query, Double.class, applicationId);
                 return xValues.isEmpty() ? Optional.empty() : Optional.of(xValues);
             } catch (DataAccessException e) {
-                throw new RuntimeException(e);
+                logger.error("Database error while fetching x values for applicationId: {}", applicationId, e);
+                throw new SolverException("Failed to fetch x values", e);
             }
         });
     }
@@ -174,6 +191,7 @@ public class DBService {
     @Async
     @Transactional
     public CompletableFuture<Optional<List<double[]>>> getYValuesByApplicationId(int applicationId) {
+        logger.debug("Fetching y values for applicationId: {}", applicationId);
         return CompletableFuture.supplyAsync(() -> {
             String query = """
                 SELECT jsonb_array_elements(data->'yvalues')::jsonb AS y_value
@@ -192,8 +210,12 @@ public class DBService {
                     yValues.add(objectMapper.readValue(json, double[].class));
                 }
                 return Optional.of(yValues);
-            } catch (DataAccessException | JsonProcessingException e) {
-                throw new RuntimeException(e);
+            } catch (DataAccessException e) {
+                logger.error("Database error while fetching y values for applicationId: {}", applicationId, e);
+                throw new SolverException("Failed to fetch y values", e);
+            } catch (JsonProcessingException e) {
+                logger.error("JSON processing error while parsing y values for applicationId: {}", applicationId, e);
+                throw new SolverException("Failed to parse y values", e);
             }
         });
     }
@@ -201,6 +223,7 @@ public class DBService {
     @Async
     @Transactional
     public CompletableFuture<Optional<double[]>> getSolutionByApplicationId(int applicationId) {
+        logger.debug("Fetching solution for applicationId: {}", applicationId);
         return CompletableFuture.supplyAsync(() -> {
             String query = """
                 SELECT data->>'solution' AS solution
@@ -215,8 +238,12 @@ public class DBService {
                 
                 ObjectMapper objectMapper = new ObjectMapper();
                 return Optional.of(objectMapper.readValue(solutions.getFirst(), double[].class));
-            } catch (DataAccessException | JsonProcessingException e) {
-                throw new RuntimeException(e);
+            } catch (DataAccessException e) {
+                logger.error("Database error while fetching solution for applicationId: {}", applicationId, e);
+                throw new SolverException("Failed to fetch solution", e);
+            } catch (JsonProcessingException e) {
+                logger.error("JSON processing error while parsing solution for applicationId: {}", applicationId, e);
+                throw new SolverException("Failed to parse solution", e);
             }
         });
     }
@@ -224,6 +251,7 @@ public class DBService {
     @Async
     @Transactional
     public CompletableFuture<Optional<String>> getApplicationStatusByApplicationId(int applicationId) {
+        logger.debug("Fetching status for applicationId: {}", applicationId);
         return CompletableFuture.supplyAsync(() -> {
             String query = """
                 SELECT status
@@ -234,7 +262,8 @@ public class DBService {
                 List<String> statuses = jdbcTemplate.queryForList(query, String.class, applicationId);
                 return statuses.isEmpty() ? Optional.empty() : Optional.of(statuses.getFirst());
             } catch (DataAccessException e) {
-                throw new RuntimeException(e);
+                logger.error("Database error while fetching status for applicationId: {}", applicationId, e);
+                throw new SolverException("Failed to fetch application status", e);
             }
         });
     }
@@ -242,6 +271,7 @@ public class DBService {
     @Async
     @Transactional
     public CompletableFuture<Void> updateApplicationStatus(int applicationId, String status) {
+        logger.debug("Updating status to {} for applicationId: {}", status, applicationId);
         return CompletableFuture.runAsync(() -> {
             String query = """
                 UPDATE applications
@@ -251,7 +281,8 @@ public class DBService {
             try {
                 jdbcTemplate.update(query, status, applicationId);
             } catch (DataAccessException e) {
-                throw new RuntimeException(e);
+                logger.error("Database error while updating status for applicationId: {}", applicationId, e);
+                throw new SolverException("Failed to update application status", e);
             }
         });
     }
@@ -259,6 +290,7 @@ public class DBService {
     @Async
     @Transactional
     public CompletableFuture<Void> saveResults(int applicationId, String results) {
+        logger.debug("Saving results for applicationId: {}", applicationId);
         return CompletableFuture.runAsync(() -> {
             String query = """
                 INSERT INTO results (application_id, data)
@@ -267,7 +299,8 @@ public class DBService {
             try {
                 jdbcTemplate.update(query, applicationId, results);
             } catch (DataAccessException e) {
-                throw new RuntimeException(e);
+                logger.error("Database error while saving results for applicationId: {}", applicationId, e);
+                throw new SolverException("Failed to save results", e);
             }
         });
     }
@@ -276,6 +309,7 @@ public class DBService {
     @Scheduled(cron = "0 */15 * * * *") // Every 15 minutes
     @Transactional
     public CompletableFuture<Void> cleanOldApplications() {
+        logger.debug("Starting scheduled cleanup of old applications");
         return CompletableFuture.runAsync(() -> {
             String query = """
                 WITH ranked_applications AS (
@@ -294,9 +328,11 @@ public class DBService {
                 """;
             
             try {
-                jdbcTemplate.update(query);
+                int deletedCount = jdbcTemplate.update(query);
+                logger.debug("Cleaned up {} old applications", deletedCount);
             } catch (DataAccessException e) {
-                throw new RuntimeException("Failed to clean old applications", e);
+                logger.error("Database error while cleaning old applications", e);
+                throw new SolverException("Failed to clean old applications", e);
             }
         });
     }

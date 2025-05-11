@@ -1,6 +1,9 @@
 package com.solver;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.http.ResponseEntity;
 
 import java.util.concurrent.CompletableFuture;
 import java.util.List;
@@ -9,9 +12,9 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/solver")
 public class SolverController {
+    private static final Logger logger = LoggerFactory.getLogger(SolverController.class);
 
     private final Main main;
-
     private final DBService dbService;
 
     public SolverController(Main main, DBService dbService) {
@@ -20,18 +23,21 @@ public class SolverController {
     }
 
     @PostMapping("/users/{userId}")
-    public CompletableFuture<String> setUserSettingsById(
+    public CompletableFuture<ResponseEntity<String>> setUserSettingsById(
             @PathVariable("userId") Integer userId,
             @RequestParam("language") String language,
             @RequestParam("rounding") String rounding,
             @RequestParam("method") String method) {
+        logger.debug("Setting user settings for userId: {}", userId);
         return dbService.setUserSettingsById(userId, language, rounding, method)
-                .thenApply(optionalResult -> optionalResult.orElseThrow(() -> 
-                    new RuntimeException("Failed to update settings for userId: " + userId)));
+                .thenApply(optionalResult -> optionalResult
+                    .map(ResponseEntity::ok)
+                    .orElseThrow(() -> new SolverException("Failed to update settings for userId: " + userId)));
     }
 
     @PostMapping("/solve")
-    public CompletableFuture<SolutionResponse> solve(@RequestBody SolverRequest request) {
+    public CompletableFuture<ResponseEntity<SolutionResponse>> solve(@RequestBody SolverRequest request) {
+        logger.debug("Received solve request: {}", request.toJson());
         return CompletableFuture.supplyAsync(() -> {
             int applicationId = -1;
             try {
@@ -40,7 +46,8 @@ public class SolverController {
                     "new"
                 ).join();
 
-                dbService.updateApplicationStatus(applicationId, "in_progress");
+                logger.debug("Created application with id: {}", applicationId);
+                dbService.updateApplicationStatus(applicationId, "in_progress").join();
 
                 main.setMethod(request.getMethod());
                 main.setOrder(request.getOrder());
@@ -55,28 +62,31 @@ public class SolverController {
                 List<Double> xValues = main.getXValues();
                 List<double[]> yValues = main.getYValues();
 
-                dbService.saveResults(applicationId, new SolutionResponse(solution, xValues, yValues).toJson());
+                SolutionResponse response = new SolutionResponse(solution, xValues, yValues);
+                dbService.saveResults(applicationId, response.toJson()).join();
+                dbService.updateApplicationStatus(applicationId, "completed").join();
 
-                dbService.updateApplicationStatus(applicationId, "completed");
-
-                return new SolutionResponse(solution, xValues, yValues);
+                logger.debug("Successfully solved problem for application id: {}", applicationId);
+                return ResponseEntity.ok(response);
             } catch (Exception e) {
+                logger.error("Error solving problem for application id: {}", applicationId, e);
                 if (applicationId != -1) {
                     try {
-                        dbService.updateApplicationStatus(applicationId, "error");
+                        dbService.updateApplicationStatus(applicationId, "error").join();
                     } catch (Exception sqlException) {
-                        sqlException.printStackTrace();
+                        logger.error("Failed to update application status to error", sqlException);
                     }
                 }
-                throw new RuntimeException("Error solving the problem", e);
+                throw new SolverException("Error solving the problem", e);
             }
         });
     }
 
     @PostMapping("/solve/{userId}")
-    public CompletableFuture<Integer> solveWithUserId(
+    public CompletableFuture<ResponseEntity<Integer>> solveWithUserId(
             @PathVariable("userId") Integer userId,
             @RequestBody SolverRequest request) {
+        logger.debug("Received solve request with userId: {}", userId);
         return CompletableFuture.supplyAsync(() -> {
             final int applicationId;
             try {
@@ -86,9 +96,11 @@ public class SolverController {
                     userId
                 ).join();
 
+                logger.debug("Created application with id: {} for userId: {}", applicationId, userId);
+
                 CompletableFuture.runAsync(() -> {
                     try {
-                        dbService.updateApplicationStatus(applicationId, "in_progress");
+                        dbService.updateApplicationStatus(applicationId, "in_progress").join();
 
                         main.setMethod(request.getMethod());
                         main.setOrder(request.getOrder());
@@ -103,67 +115,83 @@ public class SolverController {
                         List<Double> xValues = main.getXValues();
                         List<double[]> yValues = main.getYValues();
 
-                        dbService.saveResults(applicationId, new SolutionResponse(solution, xValues, yValues).toJson());
-                        dbService.updateApplicationStatus(applicationId, "completed");
+                        SolutionResponse response = new SolutionResponse(solution, xValues, yValues);
+                        dbService.saveResults(applicationId, response.toJson()).join();
+                        dbService.updateApplicationStatus(applicationId, "completed").join();
+
+                        logger.debug("Successfully solved problem for application id: {}", applicationId);
                     } catch (Exception e) {
+                        logger.error("Error solving problem for application id: {}", applicationId, e);
                         try {
-                            dbService.updateApplicationStatus(applicationId, "error");
+                            dbService.updateApplicationStatus(applicationId, "error").join();
                         } catch (Exception sqlException) {
-                            sqlException.printStackTrace();
+                            logger.error("Failed to update application status to error", sqlException);
                         }
                     }
                 });
 
-                return applicationId;
+                return ResponseEntity.ok(applicationId);
             } catch (Exception e) {
-                throw new RuntimeException("Error creating application", e);
+                logger.error("Error creating application for userId: {}", userId, e);
+                throw new SolverException("Error creating application", e);
             }
         });
     }
 
     @GetMapping("/users/{userId}")
-    public CompletableFuture<String> getUserSettingsById(@PathVariable("userId") Integer userId) {
+    public CompletableFuture<ResponseEntity<String>> getUserSettingsById(@PathVariable("userId") Integer userId) {
+        logger.debug("Getting user settings for userId: {}", userId);
         return dbService.getUserSettingsById(userId)
-                .thenApply(optionalSettings -> optionalSettings.orElseThrow(() -> 
-                    new RuntimeException("User settings not found for userId: " + userId)));
+                .thenApply(optionalSettings -> optionalSettings
+                    .map(ResponseEntity::ok)
+                    .orElseThrow(() -> new SolverException("User settings not found for userId: " + userId)));
     }
 
     @GetMapping("/applications/{applicationId}/status")
-    public CompletableFuture<String> getApplicationStatusByApplicationId(@PathVariable("applicationId") int applicationId) {
+    public CompletableFuture<ResponseEntity<String>> getApplicationStatusByApplicationId(@PathVariable("applicationId") int applicationId) {
+        logger.debug("Getting application status for id: {}", applicationId);
         return dbService.getApplicationStatusByApplicationId(applicationId)
-                .thenApply(optionalStatus -> optionalStatus.orElseThrow(() -> 
-                    new RuntimeException("Application status not found for applicationId: " + applicationId)));
+                .thenApply(optionalStatus -> optionalStatus
+                    .map(ResponseEntity::ok)
+                    .orElseThrow(() -> new SolverException("Application status not found for applicationId: " + applicationId)));
     }
 
     @GetMapping("/applications/list/{userId}")
-    public CompletableFuture<List<Map<String, Object>>> getApplicationsByUserId(@PathVariable("userId") Integer userId) {
+    public CompletableFuture<ResponseEntity<List<Map<String, Object>>>> getApplicationsByUserId(@PathVariable("userId") Integer userId) {
+        logger.debug("Getting applications list for userId: {}", userId);
         return dbService.getApplicationsByUserId(userId)
                 .thenApply(applications -> {
                     if (applications.isEmpty()) {
-                        throw new RuntimeException("Applications not found for userId: " + userId);
+                        throw new SolverException("Applications not found for userId: " + userId);
                     }
-                    return applications;
+                    return ResponseEntity.ok(applications);
                 });
     }
 
     @GetMapping("/results/{applicationId}/solution")
-    public CompletableFuture<double[]> getSolutionByApplicationId(@PathVariable("applicationId") int applicationId) {
+    public CompletableFuture<ResponseEntity<double[]>> getSolutionByApplicationId(@PathVariable("applicationId") int applicationId) {
+        logger.debug("Getting solution for application id: {}", applicationId);
         return dbService.getSolutionByApplicationId(applicationId)
-                .thenApply(optionalSolution -> optionalSolution.orElseThrow(() -> 
-                    new RuntimeException("Solution not found for applicationId: " + applicationId)));
+                .thenApply(optionalSolution -> optionalSolution
+                    .map(ResponseEntity::ok)
+                    .orElseThrow(() -> new SolverException("Solution not found for applicationId: " + applicationId)));
     }
 
     @GetMapping("/results/{applicationId}/xvalues")
-    public CompletableFuture<List<Double>> getXValuesByApplicationId(@PathVariable("applicationId") int applicationId) {
+    public CompletableFuture<ResponseEntity<List<Double>>> getXValuesByApplicationId(@PathVariable("applicationId") int applicationId) {
+        logger.debug("Getting x values for application id: {}", applicationId);
         return dbService.getXValuesByApplicationId(applicationId)
-                .thenApply(optionalXValues -> optionalXValues.orElseThrow(() -> 
-                    new RuntimeException("xValues not found for applicationId: " + applicationId)));
+                .thenApply(optionalXValues -> optionalXValues
+                    .map(ResponseEntity::ok)
+                    .orElseThrow(() -> new SolverException("xValues not found for applicationId: " + applicationId)));
     }
 
     @GetMapping("/results/{applicationId}/yvalues")
-    public CompletableFuture<List<double[]>> getYValuesByApplicationId(@PathVariable("applicationId") int applicationId) {
+    public CompletableFuture<ResponseEntity<List<double[]>>> getYValuesByApplicationId(@PathVariable("applicationId") int applicationId) {
+        logger.debug("Getting y values for application id: {}", applicationId);
         return dbService.getYValuesByApplicationId(applicationId)
-                .thenApply(optionalYValues -> optionalYValues.orElseThrow(() -> 
-                    new RuntimeException("yValues not found for applicationId: " + applicationId)));
+                .thenApply(optionalYValues -> optionalYValues
+                    .map(ResponseEntity::ok)
+                    .orElseThrow(() -> new SolverException("yValues not found for applicationId: " + applicationId)));
     }
 }
