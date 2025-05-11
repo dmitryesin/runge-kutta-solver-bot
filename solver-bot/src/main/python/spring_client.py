@@ -3,7 +3,6 @@ import asyncio
 import json
 
 from aiohttp import ClientError, ClientTimeout, ClientSession
-from equation.function_replacer import replace_math_functions
 
 JAVA_SERVER_URL = "http://localhost:8080/api/solver"
 REQUEST_TIMEOUT = 60
