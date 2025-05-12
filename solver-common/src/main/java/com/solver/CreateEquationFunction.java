@@ -43,9 +43,20 @@ public class CreateEquationFunction {
             }
             
             expression.setVariables(variables);
-            return expression.evaluate();
+            double result = expression.evaluate();
+            
+            if (Double.isNaN(result)) {
+                throw new SolverException("Result is NaN at x = " + x);
+            }
+            
+            return result;
+        } catch (ArithmeticException e) {
+            if (e.getMessage().contains("Division by zero")) {
+                throw new SolverException("Division by zero occurred at x = " + x);
+            }
+            throw new SolverException("Arithmetic error in equation: " + equation, e);
         } catch (Exception e) {
-            throw new RuntimeException("Error: " + equation, e);
+            throw new SolverException("Error evaluating equation: " + equation, e);
         }
     }
 }
