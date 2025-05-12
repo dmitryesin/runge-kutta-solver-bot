@@ -1,4 +1,5 @@
 import json
+import os
 import telegram
 
 from logger import logger
@@ -34,9 +35,6 @@ from telegram.ext import (
 )
 
 PY_DIR = "solver-bot/src/main/python/"
-
-CONFIG = json.load(open(
-    PY_DIR + "config/config.json", "r", encoding="utf-8"))
 
 LANG_TEXTS = json.load(open(
     PY_DIR + "languages.json", "r", encoding="utf-8"))
@@ -882,7 +880,7 @@ async def save_user_settings(context: ContextTypes.DEFAULT_TYPE):
 
 
 def main() -> None:
-    application = Application.builder().token(CONFIG['TELEGRAM_TOKEN']).build()
+    application = Application.builder().token(os.getenv("API_KEY")).build()
 
     conv_handler = ConversationHandler(
         entry_points=[CommandHandler("start", start)],
