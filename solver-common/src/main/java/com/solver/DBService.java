@@ -91,32 +91,6 @@ public class DBService {
 
     @Async
     @Transactional
-    public CompletableFuture<Integer> createApplication(String parameters, String status) {
-        logger.debug("Creating new application with status: {}", status);
-        return CompletableFuture.supplyAsync(() -> {
-            String query = """
-                INSERT INTO applications (user_id, parameters, status)
-                VALUES (?, ?::jsonb, ?)
-                RETURNING id
-                """;
-            
-            try {
-                return jdbcTemplate.queryForObject(
-                    query,
-                    (rs, rowNum) -> rs.getInt("id"),
-                    null,
-                    parameters,
-                    status
-                );
-            } catch (DataAccessException e) {
-                logger.error("Database error while creating application", e);
-                throw new SolverException("Failed to create application", e);
-            }
-        });
-    }
-
-    @Async
-    @Transactional
     public CompletableFuture<Integer> createApplicationWithUserId(String parameters, String status, Integer userId) {
         logger.debug("Creating new application for userId: {} with status: {}", userId, status);
         return CompletableFuture.supplyAsync(() -> {

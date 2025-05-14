@@ -35,53 +35,6 @@ public class SolverController {
                     .orElseThrow(() -> new SolverException("Failed to update settings for userId: " + userId)));
     }
 
-    @PostMapping("/solve")
-    public CompletableFuture<ResponseEntity<SolutionResponse>> solve(@RequestBody SolverRequest request) {
-        logger.debug("Received solve request: {}", request.toJson());
-        return CompletableFuture.supplyAsync(() -> {
-            int applicationId = -1;
-            try {
-                applicationId = dbService.createApplication(
-                    request.toJson(),
-                    "new"
-                ).join();
-
-                logger.debug("Created application with id: {}", applicationId);
-                dbService.updateApplicationStatus(applicationId, "in_progress").join();
-
-                main.setMethod(request.getMethod());
-                main.setOrder(request.getOrder());
-                main.setUserEquation(request.getUserEquation());
-                main.setEquation(request.getFormattedEquation());
-                main.setInitialX(request.getInitialX());
-                main.setInitialY(request.getInitialY());
-                main.setReachPoint(request.getReachPoint());
-                main.setStepSize(request.getStepSize());
-
-                double[] solution = main.getSolution();
-                List<Double> xValues = main.getXValues();
-                List<double[]> yValues = main.getYValues();
-
-                SolutionResponse response = new SolutionResponse(solution, xValues, yValues);
-                dbService.saveResults(applicationId, response.toJson()).join();
-                dbService.updateApplicationStatus(applicationId, "completed").join();
-
-                logger.debug("Successfully solved problem for application id: {}", applicationId);
-                return ResponseEntity.ok(response);
-            } catch (Exception e) {
-                logger.error("Error solving problem for application id: {}", applicationId, e);
-                if (applicationId != -1) {
-                    try {
-                        dbService.updateApplicationStatus(applicationId, "error").join();
-                    } catch (Exception sqlException) {
-                        logger.error("Failed to update application status to error", sqlException);
-                    }
-                }
-                throw new SolverException("Error solving the problem", e);
-            }
-        });
-    }
-
     @PostMapping("/solve/{userId}")
     public CompletableFuture<ResponseEntity<Integer>> solveWithUserId(
             @PathVariable("userId") Integer userId,
