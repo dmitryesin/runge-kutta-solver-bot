@@ -23,13 +23,13 @@ public class SolverController {
     }
 
     @PostMapping("/users/{userId}")
-    public CompletableFuture<ResponseEntity<String>> setUserSettingsById(
+    public CompletableFuture<ResponseEntity<String>> setUserSettings(
             @PathVariable("userId") Integer userId,
             @RequestParam("language") String language,
             @RequestParam("rounding") String rounding,
             @RequestParam("method") String method) {
         logger.debug("Setting user settings for userId: {}", userId);
-        return dbService.setUserSettingsById(userId, language, rounding, method)
+        return dbService.setUserSettings(userId, language, rounding, method)
                 .thenApply(optionalResult -> optionalResult
                     .map(ResponseEntity::ok)
                     .orElseThrow(() -> new SolverException("Failed to update settings for userId: " + userId)));
@@ -43,7 +43,7 @@ public class SolverController {
         return CompletableFuture.supplyAsync(() -> {
             final int applicationId;
             try {
-                applicationId = dbService.createApplicationWithUserId(
+                applicationId = dbService.createApplication(
                     request.toJson(),
                     "new", 
                     userId
@@ -92,27 +92,27 @@ public class SolverController {
     }
 
     @GetMapping("/users/{userId}")
-    public CompletableFuture<ResponseEntity<String>> getUserSettingsById(@PathVariable("userId") Integer userId) {
+    public CompletableFuture<ResponseEntity<String>> getUserSettings(@PathVariable("userId") Integer userId) {
         logger.debug("Getting user settings for userId: {}", userId);
-        return dbService.getUserSettingsById(userId)
+        return dbService.getUserSettings(userId)
                 .thenApply(optionalSettings -> optionalSettings
                     .map(ResponseEntity::ok)
                     .orElseThrow(() -> new SolverException("User settings not found for userId: " + userId)));
     }
 
     @GetMapping("/applications/{applicationId}/status")
-    public CompletableFuture<ResponseEntity<String>> getApplicationStatusByApplicationId(@PathVariable("applicationId") int applicationId) {
+    public CompletableFuture<ResponseEntity<String>> getApplicationStatus(@PathVariable("applicationId") int applicationId) {
         logger.debug("Getting application status for id: {}", applicationId);
-        return dbService.getApplicationStatusByApplicationId(applicationId)
+        return dbService.getApplicationStatus(applicationId)
                 .thenApply(optionalStatus -> optionalStatus
                     .map(ResponseEntity::ok)
                     .orElseThrow(() -> new SolverException("Application status not found for applicationId: " + applicationId)));
     }
 
     @GetMapping("/applications/list/{userId}")
-    public CompletableFuture<ResponseEntity<List<Map<String, Object>>>> getApplicationsByUserId(@PathVariable("userId") Integer userId) {
+    public CompletableFuture<ResponseEntity<List<Map<String, Object>>>> getApplications(@PathVariable("userId") Integer userId) {
         logger.debug("Getting applications list for userId: {}", userId);
-        return dbService.getApplicationsByUserId(userId)
+        return dbService.getApplications(userId)
                 .thenApply(applications -> {
                     if (applications.isEmpty()) {
                         throw new SolverException("Applications not found for userId: " + userId);
@@ -122,27 +122,27 @@ public class SolverController {
     }
 
     @GetMapping("/results/{applicationId}/solution")
-    public CompletableFuture<ResponseEntity<double[]>> getSolutionByApplicationId(@PathVariable("applicationId") int applicationId) {
+    public CompletableFuture<ResponseEntity<double[]>> getSolution(@PathVariable("applicationId") int applicationId) {
         logger.debug("Getting solution for applicationId: {}", applicationId);
-        return dbService.getSolutionByApplicationId(applicationId)
+        return dbService.getSolution(applicationId)
                 .thenApply(optionalSolution -> optionalSolution
                     .map(ResponseEntity::ok)
                     .orElseThrow(() -> new SolverException("Solution not found for applicationId: " + applicationId)));
     }
 
     @GetMapping("/results/{applicationId}/xvalues")
-    public CompletableFuture<ResponseEntity<List<Double>>> getXValuesByApplicationId(@PathVariable("applicationId") int applicationId) {
+    public CompletableFuture<ResponseEntity<List<Double>>> getXValues(@PathVariable("applicationId") int applicationId) {
         logger.debug("Getting x values for applicationId: {}", applicationId);
-        return dbService.getXValuesByApplicationId(applicationId)
+        return dbService.getXValues(applicationId)
                 .thenApply(optionalXValues -> optionalXValues
                     .map(ResponseEntity::ok)
                     .orElseThrow(() -> new SolverException("xValues not found for applicationId: " + applicationId)));
     }
 
     @GetMapping("/results/{applicationId}/yvalues")
-    public CompletableFuture<ResponseEntity<List<double[]>>> getYValuesByApplicationId(@PathVariable("applicationId") int applicationId) {
+    public CompletableFuture<ResponseEntity<List<double[]>>> getYValues(@PathVariable("applicationId") int applicationId) {
         logger.debug("Getting y values for applicationId: {}", applicationId);
-        return dbService.getYValuesByApplicationId(applicationId)
+        return dbService.getYValues(applicationId)
                 .thenApply(optionalYValues -> optionalYValues
                     .map(ResponseEntity::ok)
                     .orElseThrow(() -> new SolverException("yValues not found for applicationId: " + applicationId)));
