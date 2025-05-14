@@ -72,9 +72,9 @@ public class SolverController {
                         dbService.saveResults(applicationId, response.toJson()).join();
                         dbService.updateApplicationStatus(applicationId, "completed").join();
 
-                        logger.debug("Successfully solved problem for application id: {}", applicationId);
+                        logger.debug("Successfully solved problem for applicationId: {}", applicationId);
                     } catch (Exception e) {
-                        logger.error("Error solving problem for application id: {}", applicationId, e);
+                        logger.error("Error solving problem for applicationId: {}", applicationId, e);
                         try {
                             dbService.updateApplicationStatus(applicationId, "error").join();
                         } catch (Exception sqlException) {
@@ -123,7 +123,7 @@ public class SolverController {
 
     @GetMapping("/results/{applicationId}/solution")
     public CompletableFuture<ResponseEntity<double[]>> getSolutionByApplicationId(@PathVariable("applicationId") int applicationId) {
-        logger.debug("Getting solution for application id: {}", applicationId);
+        logger.debug("Getting solution for applicationId: {}", applicationId);
         return dbService.getSolutionByApplicationId(applicationId)
                 .thenApply(optionalSolution -> optionalSolution
                     .map(ResponseEntity::ok)
@@ -132,7 +132,7 @@ public class SolverController {
 
     @GetMapping("/results/{applicationId}/xvalues")
     public CompletableFuture<ResponseEntity<List<Double>>> getXValuesByApplicationId(@PathVariable("applicationId") int applicationId) {
-        logger.debug("Getting x values for application id: {}", applicationId);
+        logger.debug("Getting x values for applicationId: {}", applicationId);
         return dbService.getXValuesByApplicationId(applicationId)
                 .thenApply(optionalXValues -> optionalXValues
                     .map(ResponseEntity::ok)
@@ -141,7 +141,7 @@ public class SolverController {
 
     @GetMapping("/results/{applicationId}/yvalues")
     public CompletableFuture<ResponseEntity<List<double[]>>> getYValuesByApplicationId(@PathVariable("applicationId") int applicationId) {
-        logger.debug("Getting y values for application id: {}", applicationId);
+        logger.debug("Getting y values for applicationId: {}", applicationId);
         return dbService.getYValuesByApplicationId(applicationId)
                 .thenApply(optionalYValues -> optionalYValues
                     .map(ResponseEntity::ok)
