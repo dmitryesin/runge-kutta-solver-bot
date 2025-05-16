@@ -31,7 +31,7 @@ public class DBService {
 
     @Async
     @Transactional
-    public CompletableFuture<Optional<String>> getUserSettingsById(Integer userId) {
+    public CompletableFuture<Optional<String>> getUserSettings(Integer userId) {
         logger.debug("Fetching user settings for userId: {}", userId);
         return CompletableFuture.supplyAsync(() -> {
             String query = """
@@ -94,33 +94,7 @@ public class DBService {
 
     @Async
     @Transactional
-    public CompletableFuture<Integer> createApplication(String parameters, String status) {
-        logger.debug("Creating new application with status: {}", status);
-        return CompletableFuture.supplyAsync(() -> {
-            String query = """
-                INSERT INTO applications (user_id, parameters, status)
-                VALUES (?, ?::jsonb, ?)
-                RETURNING id
-                """;
-            
-            try {
-                return jdbcTemplate.queryForObject(
-                    query,
-                    (rs, rowNum) -> rs.getInt("id"),
-                    null,
-                    parameters,
-                    status
-                );
-            } catch (DataAccessException e) {
-                logger.error("Database error while creating application", e);
-                throw new SolverException("Failed to create application", e);
-            }
-        });
-    }
-
-    @Async
-    @Transactional
-    public CompletableFuture<Integer> createApplicationWithUserId(String parameters, String status, Integer userId) {
+    public CompletableFuture<Integer> createApplication(String parameters, String status, Integer userId) {
         logger.debug("Creating new application for userId: {} with status: {}", userId, status);
         return CompletableFuture.supplyAsync(() -> {
             String query = """
@@ -145,7 +119,7 @@ public class DBService {
 
     @Async
     @Transactional
-    public CompletableFuture<List<Map<String, Object>>> getApplicationsByUserId(Integer userId) {
+    public CompletableFuture<List<Map<String, Object>>> getApplications(Integer userId) {
         logger.debug("Fetching applications for userId: {}", userId);
         return CompletableFuture.supplyAsync(() -> {
             String query = """
@@ -173,7 +147,7 @@ public class DBService {
 
     @Async
     @Transactional
-    public CompletableFuture<Optional<List<Double>>> getXValuesByApplicationId(int applicationId) {
+    public CompletableFuture<Optional<List<Double>>> getXValues(int applicationId) {
         logger.debug("Fetching x values for applicationId: {}", applicationId);
         return CompletableFuture.supplyAsync(() -> {
             String query = """
@@ -193,7 +167,7 @@ public class DBService {
 
     @Async
     @Transactional
-    public CompletableFuture<Optional<List<double[]>>> getYValuesByApplicationId(int applicationId) {
+    public CompletableFuture<Optional<List<double[]>>> getYValues(int applicationId) {
         logger.debug("Fetching y values for applicationId: {}", applicationId);
         return CompletableFuture.supplyAsync(() -> {
             String query = """
@@ -225,7 +199,7 @@ public class DBService {
 
     @Async
     @Transactional
-    public CompletableFuture<Optional<double[]>> getSolutionByApplicationId(int applicationId) {
+    public CompletableFuture<Optional<double[]>> getSolution(int applicationId) {
         logger.debug("Fetching solution for applicationId: {}", applicationId);
         return CompletableFuture.supplyAsync(() -> {
             String query = """
@@ -253,7 +227,7 @@ public class DBService {
 
     @Async
     @Transactional
-    public CompletableFuture<Optional<String>> getApplicationStatusByApplicationId(int applicationId) {
+    public CompletableFuture<Optional<String>> getApplicationStatus(int applicationId) {
         logger.debug("Fetching status for applicationId: {}", applicationId);
         return CompletableFuture.supplyAsync(() -> {
             String query = """
