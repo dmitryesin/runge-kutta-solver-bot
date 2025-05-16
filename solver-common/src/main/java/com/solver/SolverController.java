@@ -37,7 +37,7 @@ public class SolverController {
     }
 
     @PostMapping("/solve/{userId}")
-    public CompletableFuture<ResponseEntity<Integer>> solveWithUserId(
+    public CompletableFuture<ResponseEntity<Integer>> solve(
             @PathVariable("userId") Integer userId,
             @RequestBody SolverRequest request) {
         logger.debug("Received solve request with userId: {}", userId);
