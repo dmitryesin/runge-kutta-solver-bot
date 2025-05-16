@@ -30,7 +30,7 @@ public class SolverController {
             @RequestParam("language") String language,
             @RequestParam("hints") Boolean hints) {
         logger.debug("Setting user settings for userId: {}", userId);
-        return dbService.setUserSettingsById(userId, method, rounding, language, hints)
+        return dbService.setUserSettings(userId, method, rounding, language, hints)
                 .thenApply(optionalResult -> optionalResult
                     .map(ResponseEntity::ok)
                     .orElseThrow(() -> new SolverException("Failed to update settings for userId: " + userId)));
