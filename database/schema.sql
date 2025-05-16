@@ -1,8 +1,9 @@
 create Table users (
     id INT PRIMARY KEY NOT NULL,
-    language VARCHAR(2) NOT NULL,
+    method VARCHAR(25) NOT NULL,
     rounding VARCHAR(2) NOT NULL,
-    method VARCHAR(25) NOT NULL
+    language VARCHAR(2) NOT NULL,
+    hints BOOLEAN NOT NULL
 );
 
 CREATE TABLE applications (
