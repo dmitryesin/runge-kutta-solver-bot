@@ -66,7 +66,7 @@ public class DBService {
 
     @Async
     @Transactional
-    public CompletableFuture<Optional<String>> setUserSettingsById(Integer userId, String method, String rounding, String language, Boolean hints) {
+    public CompletableFuture<Optional<String>> setUserSettings(Integer userId, String method, String rounding, String language, Boolean hints) {
         logger.debug("Setting user settings for userId: {}, method: {}, rounding: {}, language: {}, hints: {}", 
             userId, method, rounding, language, hints);
         return CompletableFuture.supplyAsync(() -> {
