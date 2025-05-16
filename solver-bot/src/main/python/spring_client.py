@@ -49,11 +49,12 @@ async def set_parameters(
             raise e
 
 
-async def set_user_settings(user_id, language, rounding, method):
+async def set_user_settings(user_id, method, rounding, language, hints):
     payload = {
-        "language": language,
+        "method": method,
         "rounding": rounding,
-        "method": method
+        "language": language,
+        "hints": hints
     }
 
     timeout = ClientTimeout(total=REQUEST_TIMEOUT)
@@ -66,7 +67,7 @@ async def set_user_settings(user_id, language, rounding, method):
             return await response.text()
 
 
-async def get_user_settings(user_id, language, rounding, method):
+async def get_user_settings(user_id, method, rounding, language, hints):
     timeout = ClientTimeout(total=REQUEST_TIMEOUT)
     async with ClientSession(timeout=timeout) as session:
         async with session.get(
@@ -76,7 +77,8 @@ async def get_user_settings(user_id, language, rounding, method):
                 return {
                     'method': method,
                     'rounding': rounding,
-                    'language': language
+                    'language': language,
+                    'hints': hints
                 }
 
             response.raise_for_status()

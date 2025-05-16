@@ -25,11 +25,12 @@ public class SolverController {
     @PostMapping("/users/{userId}")
     public CompletableFuture<ResponseEntity<String>> setUserSettings(
             @PathVariable("userId") Integer userId,
-            @RequestParam("language") String language,
+            @RequestParam("method") String method,
             @RequestParam("rounding") String rounding,
-            @RequestParam("method") String method) {
+            @RequestParam("language") String language,
+            @RequestParam("hints") Boolean hints) {
         logger.debug("Setting user settings for userId: {}", userId);
-        return dbService.setUserSettings(userId, language, rounding, method)
+        return dbService.setUserSettingsById(userId, method, rounding, language, hints)
                 .thenApply(optionalResult -> optionalResult
                     .map(ResponseEntity::ok)
                     .orElseThrow(() -> new SolverException("Failed to update settings for userId: " + userId)));

@@ -35,22 +35,24 @@ public class DBService {
         logger.debug("Fetching user settings for userId: {}", userId);
         return CompletableFuture.supplyAsync(() -> {
             String query = """
-                SELECT language, rounding, method
+                SELECT method, rounding, language, hints
                 FROM users
                 WHERE id = ?
                 """;
             
             try {
                 return jdbcTemplate.queryForObject(query, (rs, rowNum) -> {
-                    String language = rs.getString("language");
-                    String rounding = rs.getString("rounding");
                     String method = rs.getString("method");
+                    String rounding = rs.getString("rounding");
+                    String language = rs.getString("language");
+                    Boolean hints = rs.getBoolean("hints");
                     return Optional.of(
                         String.format(
-                            "{\"language\": \"%s\", \"rounding\": \"%s\", \"method\": \"%s\"}",
-                            language,
+                            "{\"method\": \"%s\", \"rounding\": \"%s\", \"language\": \"%s\", \"hints\": \"%s\"}",
+                            method,
                             rounding,
-                            method));
+                            language,
+                            hints));
                 }, userId);
             } catch (EmptyResultDataAccessException e) {
                 logger.debug("No settings found for userId: {}", userId);
@@ -64,21 +66,22 @@ public class DBService {
 
     @Async
     @Transactional
-    public CompletableFuture<Optional<String>> setUserSettings(Integer userId, String language, String rounding, String method) {
-        logger.debug("Setting user settings for userId: {}, language: {}, rounding: {}, method: {}", 
-            userId, language, rounding, method);
+    public CompletableFuture<Optional<String>> setUserSettingsById(Integer userId, String method, String rounding, String language, Boolean hints) {
+        logger.debug("Setting user settings for userId: {}, method: {}, rounding: {}, language: {}, hints: {}", 
+            userId, method, rounding, language, hints);
         return CompletableFuture.supplyAsync(() -> {
             String query = """
-                INSERT INTO users (id, language, rounding, method)
-                VALUES (?, ?, ?, ?)
+                INSERT INTO users (id, method, rounding, language, hints)
+                VALUES (?, ?, ?, ?, ?)
                 ON CONFLICT (id) DO UPDATE
-                SET language = EXCLUDED.language,
+                SET method = EXCLUDED.method,
                     rounding = EXCLUDED.rounding,
-                    method = EXCLUDED.method
+                    language = EXCLUDED.language,
+                    hints = EXCLUDED.hints
                 """;
             
             try {
-                int rowsAffected = jdbcTemplate.update(query, userId, language, rounding, method);
+                int rowsAffected = jdbcTemplate.update(query, userId, method, rounding, language, hints);
                 return rowsAffected > 0 
                     ? Optional.of("Settings saved successfully") 
                     : Optional.empty();
