@@ -44,6 +44,7 @@ MENU, EQUATION, INITIAL_X, INITIAL_Y, REACH_POINT, STEP_SIZE = range(6)
 DEFAULT_METHOD = "method_runge_kutta"
 DEFAULT_ROUNDING = "4"
 DEFAULT_LANGUAGE = "en"
+DEFAULT_HINTS = "true"
 
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -52,20 +53,23 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     user_settings = await get_user_settings(
         update.effective_user.id,
-        DEFAULT_LANGUAGE,
+        DEFAULT_METHOD,
         DEFAULT_ROUNDING,
-        DEFAULT_METHOD
+        DEFAULT_LANGUAGE,
+        DEFAULT_HINTS
     )
 
     context.user_data['method'] = user_settings.get('method', DEFAULT_METHOD)
     context.user_data['rounding'] = user_settings.get('rounding', DEFAULT_ROUNDING)
     context.user_data['language'] = user_settings.get('language', DEFAULT_LANGUAGE)
+    context.user_data['hints'] = user_settings.get('hints', DEFAULT_HINTS)
 
     await set_user_settings(
         update.effective_user.id,
-        context.user_data['language'],
+        context.user_data['method'],
         context.user_data['rounding'],
-        context.user_data['method']
+        context.user_data['language'],
+        context.user_data['hints']
     )
 
     current_state = context.user_data.get("state", None)
@@ -135,6 +139,7 @@ async def settings(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await query.answer()
 
     current_language = context.user_data.get('language', DEFAULT_LANGUAGE)
+    current_hints = context.user_data.get('hints', DEFAULT_HINTS)
 
     keyboard = [
         [InlineKeyboardButton(
@@ -147,14 +152,26 @@ async def settings(update: Update, context: ContextTypes.DEFAULT_TYPE):
             LANG_TEXTS[current_language]["change_language"],
             callback_data="settings_language")],
         [InlineKeyboardButton(
+            LANG_TEXTS[current_language]["hints_switch"] + " " +
+            LANG_TEXTS[current_language]["hints_switch_on"],
+            callback_data="true")
+            if current_hints == "true" else InlineKeyboardButton(
+                LANG_TEXTS[current_language]["hints_switch"] + " " +
+                LANG_TEXTS[current_language]["hints_switch_off"],
+                callback_data="false")],
+        [InlineKeyboardButton(
             LANG_TEXTS[current_language]["back"],
             callback_data="back")]
     ]
 
-    await query.edit_message_text(
-        LANG_TEXTS[current_language]["settings_menu"],
-        reply_markup=InlineKeyboardMarkup(keyboard)
-    )
+    new_text = LANG_TEXTS[current_language]["settings_menu"]
+    new_reply_markup = InlineKeyboardMarkup(keyboard)
+
+    if query.message.text != new_text or query.message.reply_markup != new_reply_markup:
+        await query.edit_message_text(
+            new_text,
+            reply_markup=new_reply_markup
+        )
 
     return MENU
 
@@ -168,9 +185,10 @@ async def method(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     await set_user_settings(
         update.effective_user.id,
-        context.user_data['language'],
+        context.user_data['method'],
         context.user_data['rounding'],
-        context.user_data['method']
+        context.user_data['language'],
+        context.user_data['hints']
     )
 
     await settings_method(update, context)
@@ -234,9 +252,10 @@ async def rounding(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     await set_user_settings(
         update.effective_user.id,
-        context.user_data['language'],
+        context.user_data['method'],
         context.user_data['rounding'],
-        context.user_data['method']
+        context.user_data['language'],
+        context.user_data['hints']
     )
 
     await settings_rounding(update, context)
@@ -296,9 +315,10 @@ async def language(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     await set_user_settings(
         update.effective_user.id,
-        context.user_data['language'],
+        context.user_data['method'],
         context.user_data['rounding'],
-        context.user_data['method']
+        context.user_data['language'],
+        context.user_data['hints']
     )
 
     await settings_language(update, context)
@@ -338,6 +358,24 @@ async def settings_language(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
 
     return MENU
+
+
+async def hints(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    query = update.callback_query
+    await query.answer()
+
+    current_hints = "false" if context.user_data.get('hints', DEFAULT_HINTS) == "true" else "true"
+    context.user_data['hints'] = current_hints
+
+    await set_user_settings(
+        update.effective_user.id,
+        context.user_data['method'],
+        context.user_data['rounding'],
+        context.user_data['language'],
+        context.user_data['hints']
+    )
+
+    return await settings(update, context)
 
 
 async def solve_history(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -500,6 +538,31 @@ async def solve_history_details(update: Update, context: ContextTypes.DEFAULT_TY
     return MENU
 
 
+async def send_localized_message(
+        update: Update, context: ContextTypes.DEFAULT_TYPE,
+        key_without_hint,
+        key_with_hint
+):
+    current_language = context.user_data.get('language', DEFAULT_LANGUAGE)
+    current_hints = context.user_data.get('hints', DEFAULT_HINTS)
+
+    text = LANG_TEXTS[current_language].get(key_without_hint, "")
+    
+    if current_hints == "true":
+        text += f"<i>\n\n{LANG_TEXTS[current_language]["hints_text"]}</i>"
+        text += f"<i> {LANG_TEXTS[current_language].get(key_with_hint, "")}</i>"
+
+    if update.message:
+        await update.message.reply_text(text, parse_mode="HTML")
+    else:
+        query = update.callback_query
+        await query.answer()
+        if query.message and query.message.text:
+            await query.edit_message_text(text, parse_mode="HTML")
+        else:
+            await query.message.reply_text(text, parse_mode="HTML")
+
+
 async def solve(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     await query.answer()
@@ -508,7 +571,6 @@ async def solve(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     current_method = context.user_data.get('method', DEFAULT_METHOD)
     current_rounding = context.user_data.get('rounding', DEFAULT_ROUNDING)
-    current_language = context.user_data.get('language', DEFAULT_LANGUAGE)
 
     logger.info("User %s started solving", user.id)
     logger.info("Method of %s: %s", user.id, current_method)
@@ -516,14 +578,7 @@ async def solve(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     context.user_data['state'] = EQUATION
 
-    if query.message and query.message.text:
-        await query.edit_message_text(
-            LANG_TEXTS[current_language]["enter_equation"]
-        )
-    else:
-        await query.message.reply_text(
-            LANG_TEXTS[current_language]["enter_equation"]
-        )
+    await send_localized_message(update, context, "enter_equation", "hints_enter_equation")
 
     return EQUATION
 
@@ -575,8 +630,7 @@ async def equation(update: Update, context: ContextTypes.DEFAULT_TYPE):
     context.user_data['order'] = order
     context.user_data['state'] = INITIAL_X
 
-    await update.message.reply_text(
-        LANG_TEXTS[current_language]["enter_x"])
+    await send_localized_message(update, context, "enter_x", "hints_enter_x")
 
     return INITIAL_X
 
@@ -606,14 +660,10 @@ async def initial_x(update: Update, context: ContextTypes.DEFAULT_TYPE):
     context.user_data['state'] = INITIAL_Y
 
     if int(context.user_data['order']) == 1:
-        await update.message.reply_text(
-            LANG_TEXTS[current_language]["enter_y"]
-        )
+        await send_localized_message(update, context, "enter_y", "hints_enter_y")
         return INITIAL_Y
     else:
-        await update.message.reply_text(
-            LANG_TEXTS[current_language]["enter_y_multiple"]
-        )
+        await send_localized_message(update, context, "enter_y_multiple", "hints_enter_y_multiple")
 
     return INITIAL_Y
 
@@ -668,8 +718,8 @@ async def initial_y(update: Update, context: ContextTypes.DEFAULT_TYPE):
     logger.info("Initial y of %s: %s", user.id, user_input)
     context.user_data['initial_y'] = splitted_user_input
     context.user_data['state'] = REACH_POINT
-    await update.message.reply_text(
-        LANG_TEXTS[current_language]["enter_reach_point"])
+
+    await send_localized_message(update, context, "enter_reach_point", "hints_enter_reach_point")
 
     return REACH_POINT
 
@@ -696,8 +746,8 @@ async def reach_point(update: Update, context: ContextTypes.DEFAULT_TYPE):
     logger.info("Reach point of %s: %s", user.id, user_input)
     context.user_data['reach_point'] = user_input
     context.user_data['state'] = STEP_SIZE
-    await update.message.reply_text(
-        LANG_TEXTS[current_language]["enter_step_size"])
+
+    await send_localized_message(update, context, "enter_step_size", "hints_enter_step_size")
 
     return STEP_SIZE
 
@@ -873,7 +923,7 @@ async def cancel(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 async def save_user_settings(context: ContextTypes.DEFAULT_TYPE):
-    keys_to_keep = ['method', 'rounding', 'language']
+    keys_to_keep = ['method', 'rounding', 'language', 'hints']
     for key in list(context.user_data.keys()):
         if key not in keys_to_keep:
             del context.user_data[key]
@@ -905,7 +955,8 @@ def main() -> None:
                     pattern="^method_(euler|modified_euler|runge_kutta|dormand_prince)$"
                 ),
                 CallbackQueryHandler(rounding, pattern="^(4|6|8|16)$"),
-                CallbackQueryHandler(language, pattern="^(en|ru|zh)$")
+                CallbackQueryHandler(language, pattern="^(en|ru|zh)$"),
+                CallbackQueryHandler(hints, pattern="^(true|false)$"),
             ],
             EQUATION: [MessageHandler(filters.TEXT & ~filters.COMMAND, equation)],
             INITIAL_X: [MessageHandler(filters.TEXT & ~filters.COMMAND, initial_x)],
@@ -923,3 +974,4 @@ def main() -> None:
     application.add_handler(CommandHandler("start", start))
 
     application.run_polling(allowed_updates=Update.ALL_TYPES)
+
