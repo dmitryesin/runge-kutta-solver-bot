@@ -1,10 +1,13 @@
 import re
 import json
 
-PY_DIR = "solver-bot/src/main/python/"
+from pathlib import Path
 
-MATH_FUNCTIONS = json.load(open(
-    PY_DIR + "equation/functions.json", "r", encoding="utf-8"))
+PY_DIR = Path(__file__).parent
+functions_path = PY_DIR / "functions.json"
+
+with open(functions_path, "r", encoding="utf-8") as f:
+    MATH_FUNCTIONS = json.load(f)
 
 
 def validate_symbols(equation):

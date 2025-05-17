@@ -1,6 +1,7 @@
 import json
 import os
 import telegram
+from pathlib import Path
 
 from logger import logger
 from plotting.plotter import plot_solution
@@ -34,10 +35,12 @@ from telegram.ext import (
     filters
 )
 
-PY_DIR = "solver-bot/src/main/python/"
+PY_DIR = Path(__file__).parent
 
-LANG_TEXTS = json.load(open(
-    PY_DIR + "languages.json", "r", encoding="utf-8"))
+languages_path = PY_DIR / "languages.json"
+
+with open(languages_path, "r", encoding="utf-8") as f:
+    LANG_TEXTS = json.load(f)
 
 MENU, EQUATION, INITIAL_X, INITIAL_Y, REACH_POINT, STEP_SIZE = range(6)
 
@@ -99,11 +102,8 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     texts = {}
     for lang_code in ["en", "ru", "zh"]:
-        with open(
-            f"{PY_DIR}assets/texts/START_{lang_code.upper()}.txt",
-            "r",
-            encoding="utf-8"
-        ) as file:
+        file_path = PY_DIR / "assets" / "texts" / f"START_{lang_code.upper()}.txt"
+        with open(file_path, "r", encoding="utf-8") as file:
             texts[lang_code] = file.read()
 
     text_to_send = texts.get(current_language, texts["en"])
@@ -930,7 +930,7 @@ async def save_user_settings(context: ContextTypes.DEFAULT_TYPE):
 
 
 def main() -> None:
-    application = Application.builder().token(os.getenv("API_KEY")).build()
+    application = Application.builder().token(os.getenv("CLIENT_API_KEY")).build()
 
     conv_handler = ConversationHandler(
         entry_points=[CommandHandler("start", start)],
