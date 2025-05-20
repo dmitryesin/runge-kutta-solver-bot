@@ -81,7 +81,7 @@ public class NumericalMethods {
         return result;
     }
 
-    public static double[] methodEulerImproved(BiFunction<Double, double[], double[]> f, double x_0, double[] y_0, double h) {
+    public static double[] methodMidpoint(BiFunction<Double, double[], double[]> f, double x_0, double[] y_0, double h) {
         double[] y_next = new double[y_0.length];
 
         double[] k1 = f.apply(x_0, y_0);
