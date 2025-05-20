@@ -209,11 +209,11 @@ async def settings_method(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 LANG_TEXTS[current_language]["method_euler"],
                 callback_data="method_euler")],
         [InlineKeyboardButton(
-            f"→ {LANG_TEXTS[current_language]["method_modified_euler"]} ←",
-            callback_data="method_modified_euler")
-            if current_method == "method_modified_euler" else InlineKeyboardButton(
-                LANG_TEXTS[current_language]["method_modified_euler"],
-                callback_data="method_modified_euler")],
+            f"→ {LANG_TEXTS[current_language]["method_midpoint"]} ←",
+            callback_data="method_midpoint")
+            if current_method == "method_midpoint" else InlineKeyboardButton(
+                LANG_TEXTS[current_language]["method_midpoint"],
+                callback_data="method_midpoint")],
         [InlineKeyboardButton(
             f"→ {LANG_TEXTS[current_language]["method_runge_kutta"]} ←",
             callback_data="method_runge_kutta")
@@ -473,7 +473,7 @@ async def solve_history_details(update: Update, context: ContextTypes.DEFAULT_TY
 
         method_mapping = {
             1: LANG_TEXTS[current_language]["method_euler"],
-            2: LANG_TEXTS[current_language]["method_modified_euler"],
+            2: LANG_TEXTS[current_language]["method_midpoint"],
             4: LANG_TEXTS[current_language]["method_runge_kutta"],
             7: LANG_TEXTS[current_language]["method_dormand_prince"]
         }
@@ -952,7 +952,7 @@ def main() -> None:
                 CallbackQueryHandler(settings_language, pattern="^settings_language$"),
                 CallbackQueryHandler(
                     method,
-                    pattern="^method_(euler|modified_euler|runge_kutta|dormand_prince)$"
+                    pattern="^method_(euler|midpoint|runge_kutta|dormand_prince)$"
                 ),
                 CallbackQueryHandler(rounding, pattern="^(4|6|8|16)$"),
                 CallbackQueryHandler(language, pattern="^(en|ru|zh)$"),

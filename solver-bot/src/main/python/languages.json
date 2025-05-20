@@ -55,7 +55,7 @@
         "cancel": "Actions canceled.",
 
         "method_euler": "Euler's Method",
-        "method_modified_euler": "Improved Euler's Method",
+        "method_midpoint": "Midpoint Method",
         "method_runge_kutta": "Runge-Kutta Method",
         "method_dormand_prince": "Dormand-Prince Method",
 
@@ -123,7 +123,7 @@
         "cancel": "Действия отменены.",
 
         "method_euler": "Метод Эйлера",
-        "method_modified_euler": "Улучшенный метод Эйлера",
+        "method_midpoint": "Метод Средней Точки",
         "method_runge_kutta": "Метод Рунге-Кутта",
         "method_dormand_prince": "Метод Дормана-Принса",
 
@@ -191,7 +191,7 @@
         "cancel": "操作已取消。",
 
         "method_euler": "欧拉法",
-        "method_modified_euler": "改进欧拉法",
+        "method_midpoint": "中点法",
         "method_runge_kutta": "龙格-库塔法",
         "method_dormand_prince": "多曼德-普林斯法",
 

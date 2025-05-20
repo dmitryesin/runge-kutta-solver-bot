@@ -16,7 +16,7 @@ async def set_parameters(
 ):
     method_mapping = {
         "method_euler": 1,
-        "method_modified_euler": 2,
+        "method_midpoint": 2,
         "method_runge_kutta": 4,
         "method_dormand_prince": 7
     }
