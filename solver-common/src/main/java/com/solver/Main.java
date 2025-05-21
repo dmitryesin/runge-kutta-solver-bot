@@ -14,12 +14,12 @@ public class Main {
     private double[] initial_y;
     private double reach_point;
     private double step_size;
-    private int method;
+    private String method;
 
     private List<Double> xValues;
     private List<double[]> yValues;
 
-    public void setMethod(int method) {
+    public void setMethod(String method) {
         this.method = method;
     }
 
@@ -58,10 +58,11 @@ public class Main {
 
         while (x < reach_point - 1e-10) {
             double[] result = switch (method) {
-                case 1 -> NumericalMethods.methodEuler(equationFunction, x, y, step_size);
-                case 2 -> NumericalMethods.methodMidpoint(equationFunction, x, y, step_size);
-                case 4 -> NumericalMethods.methodRungeKutta(equationFunction, x, y, step_size);
-                case 7 -> NumericalMethods.methodDormandPrince(equationFunction, x, y, step_size);
+                case "euler" -> NumericalMethods.methodEuler(equationFunction, x, y, step_size);
+                case "midpoint" -> NumericalMethods.methodMidpoint(equationFunction, x, y, step_size);
+                case "heun" -> NumericalMethods.methodHeun(equationFunction, x, y, step_size);
+                case "rungeKutta" -> NumericalMethods.methodRungeKutta(equationFunction, x, y, step_size);
+                case "dormandPrince" -> NumericalMethods.methodDormandPrince(equationFunction, x, y, step_size);
                 default -> throw new IllegalArgumentException("Invalid method value: " + method);
             };
             x = result[0];
