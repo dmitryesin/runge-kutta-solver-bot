@@ -3,7 +3,7 @@ package com.solver;
 import java.util.function.BiFunction;
 
 public class NumericalMethods {
-    public static double[] methodDormandPrince(BiFunction<Double, double[], double[]> f, double x_0, double[] y_0, double h) {
+    public static double[] dormandPrince(BiFunction<Double, double[], double[]> f, double x_0, double[] y_0, double h) {
         double[] k1 = new double[y_0.length];
         double[] k2 = new double[y_0.length];
         double[] k3 = new double[y_0.length];
@@ -53,7 +53,7 @@ public class NumericalMethods {
         return result;
     }    
 
-    public static double[] methodRungeKutta(BiFunction<Double, double[], double[]> f, double x_0, double[] y_0, double h) {
+    public static double[] rungeKutta(BiFunction<Double, double[], double[]> f, double x_0, double[] y_0, double h) {
         double[] k1 = new double[y_0.length];
         double[] k2 = new double[y_0.length];
         double[] k3 = new double[y_0.length];
@@ -81,7 +81,7 @@ public class NumericalMethods {
         return result;
     }
 
-    public static double[] methodHeun(BiFunction<Double, double[], double[]> f, double x_0, double[] y_0, double h) {
+    public static double[] heun(BiFunction<Double, double[], double[]> f, double x_0, double[] y_0, double h) {
         double[] y_next = new double[y_0.length];
 
         double[] k1 = f.apply(x_0, y_0);
@@ -104,7 +104,7 @@ public class NumericalMethods {
         return result;
     }
 
-    public static double[] methodMidpoint(BiFunction<Double, double[], double[]> f, double x_0, double[] y_0, double h) {
+    public static double[] midpoint(BiFunction<Double, double[], double[]> f, double x_0, double[] y_0, double h) {
         double[] y_next = new double[y_0.length];
 
         double[] k1 = f.apply(x_0, y_0);
@@ -127,7 +127,7 @@ public class NumericalMethods {
         return result;
     }
 
-    public static double[] methodEuler(BiFunction<Double, double[], double[]> f, double x_0, double[] y_0, double h) {
+    public static double[] euler(BiFunction<Double, double[], double[]> f, double x_0, double[] y_0, double h) {
         double[] y_next = new double[y_0.length];
 
         double[] k1 = f.apply(x_0, y_0);

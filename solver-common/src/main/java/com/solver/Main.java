@@ -58,11 +58,11 @@ public class Main {
 
         while (x < reach_point - 1e-10) {
             double[] result = switch (method) {
-                case "euler" -> NumericalMethods.methodEuler(equationFunction, x, y, step_size);
-                case "midpoint" -> NumericalMethods.methodMidpoint(equationFunction, x, y, step_size);
-                case "heun" -> NumericalMethods.methodHeun(equationFunction, x, y, step_size);
-                case "rungeKutta" -> NumericalMethods.methodRungeKutta(equationFunction, x, y, step_size);
-                case "dormandPrince" -> NumericalMethods.methodDormandPrince(equationFunction, x, y, step_size);
+                case "euler" -> NumericalMethods.euler(equationFunction, x, y, step_size);
+                case "midpoint" -> NumericalMethods.midpoint(equationFunction, x, y, step_size);
+                case "heun" -> NumericalMethods.heun(equationFunction, x, y, step_size);
+                case "rungeKutta" -> NumericalMethods.rungeKutta(equationFunction, x, y, step_size);
+                case "dormandPrince" -> NumericalMethods.dormandPrince(equationFunction, x, y, step_size);
                 default -> throw new IllegalArgumentException("Invalid method value: " + method);
             };
             x = result[0];
