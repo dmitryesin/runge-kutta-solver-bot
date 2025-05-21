@@ -196,16 +196,6 @@ async def get_application_status(application_id):
             return await response.text()
 
 
-async def get_result_exists(application_id):
-    timeout = ClientTimeout(total=REQUEST_TIMEOUT)
-    async with ClientSession(timeout=timeout) as session:
-        async with session.get(
-            f"{os.getenv("CLIENT_API_URL")}/results/{application_id}"
-        ) as response:
-            response.raise_for_status()
-            return await response.text()
-
-
 async def wait_for_application_completion(application_id):
     current_delay = RETRY_DELAY
 
