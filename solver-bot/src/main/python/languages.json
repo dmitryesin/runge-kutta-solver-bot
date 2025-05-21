@@ -56,6 +56,7 @@
 
         "method_euler": "Euler's Method",
         "method_midpoint": "Midpoint Method",
+        "method_heun": "Heun's Method",
         "method_runge_kutta": "Runge-Kutta Method",
         "method_dormand_prince": "Dormand-Prince Method",
 
@@ -124,6 +125,7 @@
 
         "method_euler": "Метод Эйлера",
         "method_midpoint": "Метод Средней Точки",
+        "method_heun": "Метод Хойна",
         "method_runge_kutta": "Метод Рунге-Кутта",
         "method_dormand_prince": "Метод Дормана-Принса",
 
@@ -192,6 +194,7 @@
 
         "method_euler": "欧拉法",
         "method_midpoint": "中点法",
+        "method_heun": "休恩法",
         "method_runge_kutta": "龙格-库塔法",
         "method_dormand_prince": "多曼德-普林斯法",
 
