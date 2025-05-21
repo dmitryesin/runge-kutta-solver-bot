@@ -15,14 +15,15 @@ async def set_parameters(
     initial_x, initial_y, reach_point, step_size
 ):
     method_mapping = {
-        "method_euler": 1,
-        "method_midpoint": 2,
-        "method_runge_kutta": 4,
-        "method_dormand_prince": 7
+        "method_euler": "euler",
+        "method_midpoint": "midpoint",
+        "method_heun": "heun",
+        "method_runge_kutta": "rungeKutta",
+        "method_dormand_prince": "dormandPrince",
     }
 
     payload = {
-        "method": method_mapping.get(method, 1),
+        "method": method_mapping.get(method, "euler"),
         "order": int(order),
         "userEquation": user_equation,
         "formattedEquation": formatted_equation,

@@ -4,7 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class SolverRequest {
-    private int method;
+    private String method;
     private int order;
     private String userEquation;
     private String formattedEquation;
@@ -13,8 +13,8 @@ public class SolverRequest {
     private double reachPoint;
     private double stepSize;
 
-    public int getMethod() { return method; }
-    public void setMethod(int method) { this.method = method; }
+    public String getMethod() { return method; }
+    public void setMethod(String method) { this.method = method; }
 
     public int getOrder() { return order; }
     public void setOrder(int order) { this.order = order; }
