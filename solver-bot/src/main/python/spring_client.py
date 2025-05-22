@@ -15,11 +15,11 @@ async def set_parameters(
     initial_x, initial_y, reach_point, step_size
 ):
     method_mapping = {
-        "method_euler": "euler",
-        "method_midpoint": "midpoint",
-        "method_heun": "heun",
-        "method_runge_kutta": "rungeKutta",
-        "method_dormand_prince": "dormandPrince",
+        "euler": "euler",
+        "midpoint": "midpoint",
+        "heun": "heun",
+        "runge_kutta": "rungeKutta",
+        "dormand_prince": "dormandPrince",
     }
 
     payload = {

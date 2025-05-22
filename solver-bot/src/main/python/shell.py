@@ -44,7 +44,7 @@ with open(languages_path, "r", encoding="utf-8") as f:
 
 MENU, EQUATION, INITIAL_X, INITIAL_Y, REACH_POINT, STEP_SIZE = range(6)
 
-DEFAULT_METHOD = "method_runge_kutta"
+DEFAULT_METHOD = "runge_kutta"
 DEFAULT_ROUNDING = "4"
 DEFAULT_LANGUAGE = "en"
 DEFAULT_HINTS = "true"
@@ -203,35 +203,35 @@ async def settings_method(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     keyboard = [
         [InlineKeyboardButton(
-            f"→ {LANG_TEXTS[current_language]["method_euler"]} ←",
-            callback_data="method_euler")
-            if current_method == "method_euler" else InlineKeyboardButton(
-                LANG_TEXTS[current_language]["method_euler"],
-                callback_data="method_euler")],
+            f"→ {LANG_TEXTS[current_language]["numerical_methods"]["euler"]} ←",
+            callback_data="euler")
+            if current_method == "euler" else InlineKeyboardButton(
+                LANG_TEXTS[current_language]["numerical_methods"]["euler"],
+                callback_data="euler")],
         [InlineKeyboardButton(
-            f"→ {LANG_TEXTS[current_language]["method_midpoint"]} ←",
-            callback_data="method_midpoint")
-            if current_method == "method_midpoint" else InlineKeyboardButton(
-                LANG_TEXTS[current_language]["method_midpoint"],
-                callback_data="method_midpoint")],
+            f"→ {LANG_TEXTS[current_language]["numerical_methods"]["midpoint"]} ←",
+            callback_data="midpoint")
+            if current_method == "midpoint" else InlineKeyboardButton(
+                LANG_TEXTS[current_language]["numerical_methods"]["midpoint"],
+                callback_data="midpoint")],
         [InlineKeyboardButton(
-            f"→ {LANG_TEXTS[current_language]["method_heun"]} ←",
-            callback_data="method_heun")
-            if current_method == "method_heun" else InlineKeyboardButton(
-                LANG_TEXTS[current_language]["method_heun"],
-                callback_data="method_heun")],
+            f"→ {LANG_TEXTS[current_language]["numerical_methods"]["heun"]} ←",
+            callback_data="heun")
+            if current_method == "heun" else InlineKeyboardButton(
+                LANG_TEXTS[current_language]["numerical_methods"]["heun"],
+                callback_data="heun")],
         [InlineKeyboardButton(
-            f"→ {LANG_TEXTS[current_language]["method_runge_kutta"]} ←",
-            callback_data="method_runge_kutta")
-            if current_method == "method_runge_kutta" else InlineKeyboardButton(
-                LANG_TEXTS[current_language]["method_runge_kutta"],
-                callback_data="method_runge_kutta")],
+            f"→ {LANG_TEXTS[current_language]["numerical_methods"]["runge_kutta"]} ←",
+            callback_data="runge_kutta")
+            if current_method == "runge_kutta" else InlineKeyboardButton(
+                LANG_TEXTS[current_language]["numerical_methods"]["runge_kutta"],
+                callback_data="runge_kutta")],
         [InlineKeyboardButton(
-            f"→ {LANG_TEXTS[current_language]["method_dormand_prince"]} ←",
-            callback_data="method_dormand_prince")
-            if current_method == "method_dormand_prince" else InlineKeyboardButton(
-                LANG_TEXTS[current_language]["method_dormand_prince"],
-                callback_data="method_dormand_prince")],
+            f"→ {LANG_TEXTS[current_language]["numerical_methods"]["dormand_prince"]} ←",
+            callback_data="dormand_prince")
+            if current_method == "dormand_prince" else InlineKeyboardButton(
+                LANG_TEXTS[current_language]["numerical_methods"]["dormand_prince"],
+                callback_data="dormand_prince")],
         [InlineKeyboardButton(
             LANG_TEXTS[current_language]["back"],
             callback_data="settings_back")]
@@ -478,11 +478,11 @@ async def solve_history_details(update: Update, context: ContextTypes.DEFAULT_TY
             initial_y_str = str(initial_y)
 
         method_mapping = {
-            "euler": LANG_TEXTS[current_language]["method_euler"],
-            "midpoint": LANG_TEXTS[current_language]["method_midpoint"],
-            "heun": LANG_TEXTS[current_language]["method_heun"],
-            "rungeKutta": LANG_TEXTS[current_language]["method_runge_kutta"],
-            "dormandPrince": LANG_TEXTS[current_language]["method_dormand_prince"]
+            "euler": LANG_TEXTS[current_language]["numerical_methods"]["euler"],
+            "midpoint": LANG_TEXTS[current_language]["numerical_methods"]["midpoint"],
+            "heun": LANG_TEXTS[current_language]["numerical_methods"]["heun"],
+            "rungeKutta": LANG_TEXTS[current_language]["numerical_methods"]["runge_kutta"],
+            "dormandPrince": LANG_TEXTS[current_language]["numerical_methods"]["dormand_prince"]
         }
 
         method_display = method_mapping.get(method, method)
@@ -959,7 +959,7 @@ def main() -> None:
                 CallbackQueryHandler(settings_language, pattern="^settings_language$"),
                 CallbackQueryHandler(
                     method,
-                    pattern="^method_(euler|midpoint|heun|runge_kutta|dormand_prince)$"
+                    pattern="^(euler|midpoint|heun|runge_kutta|dormand_prince)$"
                 ),
                 CallbackQueryHandler(rounding, pattern="^(4|6|8|16)$"),
                 CallbackQueryHandler(language, pattern="^(en|ru|zh)$"),
