@@ -54,11 +54,13 @@
         "error_displaying_application": "Error displaying task details.",
         "cancel": "Actions canceled.",
 
-        "method_euler": "Euler's Method",
-        "method_midpoint": "Midpoint Method",
-        "method_heun": "Heun's Method",
-        "method_runge_kutta": "Runge-Kutta Method",
-        "method_dormand_prince": "Dormand-Prince Method",
+        "numerical_methods": {
+            "euler": "Euler's Method",
+            "midpoint": "Midpoint Method",
+            "heun": "Heun's Method",
+            "runge_kutta": "Runge-Kutta Method",
+            "dormand_prince": "Dormand-Prince Method"
+        },
 
         "method": "Method",
         "equation": "Equation",
@@ -123,11 +125,13 @@
         "error_displaying_application": "Ошибка при отображении деталей задачи.",
         "cancel": "Действия отменены.",
 
-        "method_euler": "Метод Эйлера",
-        "method_midpoint": "Метод Средней Точки",
-        "method_heun": "Метод Хойна",
-        "method_runge_kutta": "Метод Рунге-Кутта",
-        "method_dormand_prince": "Метод Дормана-Принса",
+        "numerical_methods": {
+            "euler": "Метод Эйлера",
+            "midpoint": "Метод Средней Точки",
+            "heun": "Метод Хойна",
+            "runge_kutta": "Метод Рунге-Кутта",
+            "dormand_prince": "Метод Дормана-Принса"
+        },
 
         "method": "Метод",
         "equation": "Уравнение",
@@ -192,11 +196,13 @@
         "error_displaying_application": "显示任务详情时出错。",
         "cancel": "操作已取消。",
 
-        "method_euler": "欧拉法",
-        "method_midpoint": "中点法",
-        "method_heun": "休恩法",
-        "method_runge_kutta": "龙格-库塔法",
-        "method_dormand_prince": "多曼德-普林斯法",
+        "numerical_methods": {
+            "euler": "欧拉法",
+            "midpoint": "中点法",
+            "heun": "休恩法",
+            "runge_kutta": "龙格-库塔法",
+            "dormand_prince": "多曼德-普林斯法"
+        },
 
         "method": "方法",
         "equation": "方程",
