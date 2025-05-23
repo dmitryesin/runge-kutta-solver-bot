@@ -88,15 +88,18 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         [
             InlineKeyboardButton(
                 LANG_TEXTS[current_language]["solve"],
-                callback_data="solve"),
+                callback_data="solve"
+            ),
             InlineKeyboardButton(
                 LANG_TEXTS[current_language]["settings"],
-                callback_data="settings")
+                callback_data="settings"
+            )
         ],
         [
             InlineKeyboardButton(
                 LANG_TEXTS[current_language]["solve_history"],
-                callback_data="solve_history")
+                callback_data="solve_history"
+            )
         ]
     ]
 
@@ -476,12 +479,12 @@ async def solve_history_details(update: Update, context: ContextTypes.DEFAULT_TY
             f"{print_solution(solution, order, current_rounding)}"
         )
 
-        keyboard = [
-            [InlineKeyboardButton(
+        keyboard = [[
+            InlineKeyboardButton(
                 LANG_TEXTS[current_language]["back"],
                 callback_data="solve_history_back"
-            )]
-        ]
+            )
+        ]]
 
         media = InputMediaPhoto(
             media=plot_graph,
@@ -767,12 +770,18 @@ async def solution(update: Update, context: ContextTypes.DEFAULT_TYPE):
     current_language = context.user_data.get('language', DEFAULT_LANGUAGE)
 
     keyboard = [
-        [InlineKeyboardButton(
-            LANG_TEXTS[current_language]["solve_over"],
-            callback_data="solve")],
-        [InlineKeyboardButton(
-            LANG_TEXTS[current_language]["menu"],
-            callback_data="menu")]
+        [
+            InlineKeyboardButton(
+                LANG_TEXTS[current_language]["solve_over"],
+                callback_data="solve"
+            )
+        ],
+        [
+            InlineKeyboardButton(
+                LANG_TEXTS[current_language]["menu"],
+                callback_data="menu"
+            )
+        ]
     ]
 
     new_reply_markup = InlineKeyboardMarkup(keyboard)
@@ -886,12 +895,18 @@ async def cancel(update: Update, context: ContextTypes.DEFAULT_TYPE):
         current_language = context.user_data.get('language', DEFAULT_LANGUAGE)
 
         keyboard = [
-            [InlineKeyboardButton(
-                LANG_TEXTS[current_language]["solve_over"],
-                callback_data="solve")],
-            [InlineKeyboardButton(
-                LANG_TEXTS[current_language]["menu"],
-                callback_data="menu")]
+            [
+                InlineKeyboardButton(
+                    LANG_TEXTS[current_language]["solve_over"],
+                    callback_data="solve"
+                )
+            ],
+            [
+                InlineKeyboardButton(
+                    LANG_TEXTS[current_language]["menu"],
+                    callback_data="menu"
+                )
+            ]
         ]
 
         new_reply_markup = InlineKeyboardMarkup(keyboard)
