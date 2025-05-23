@@ -313,23 +313,24 @@ async def settings_language(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     current_language = context.user_data.get('language', DEFAULT_LANGUAGE)
 
-    keyboard = [
-        [InlineKeyboardButton(
-            "→ English ←", callback_data="en") 
-            if current_language == "en" else InlineKeyboardButton(
-                "English", callback_data="en")],
-        [InlineKeyboardButton(
-            "→ Русский ←", callback_data="ru") 
-            if current_language == "ru" else InlineKeyboardButton(
-                "Русский", callback_data="ru")],
-        [InlineKeyboardButton(
-            "→ 中文 ←", callback_data="zh") 
-            if current_language == "zh" else InlineKeyboardButton(
-                "中文", callback_data="zh")],
-        [InlineKeyboardButton(
-            LANG_TEXTS[current_language]["back"],
-            callback_data="settings_back")]
+    languages = [
+        ("en", "English"),
+        ("ru", "Русский"),
+        ("zh", "中文")
     ]
+
+    keyboard = []
+
+    for language_callback, language in languages:
+        text = f"→ {language} ←" if current_language == language_callback else language
+        keyboard.append([InlineKeyboardButton(text, callback_data=language_callback)])
+
+    keyboard.append([
+        InlineKeyboardButton(
+            LANG_TEXTS[current_language]["back"],
+            callback_data="settings_back"
+        )
+    ])
 
     new_text = LANG_TEXTS[current_language]["settings_menu"]
     new_reply_markup = InlineKeyboardMarkup(keyboard)
