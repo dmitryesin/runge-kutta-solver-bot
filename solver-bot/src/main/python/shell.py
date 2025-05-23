@@ -212,7 +212,12 @@ async def settings_method(update: Update, context: ContextTypes.DEFAULT_TYPE):
         text = f"→ {method_name} ←" if current_method == method else method_name
         keyboard.append([InlineKeyboardButton(text, callback_data=method)])
 
-    keyboard.append([InlineKeyboardButton(LANG_TEXTS[current_language]["back"], callback_data="settings_back")])
+    keyboard.append([
+        InlineKeyboardButton(
+            LANG_TEXTS[current_language]["back"],
+            callback_data="settings_back"
+        )
+    ])
 
     new_text = LANG_TEXTS[current_language]["settings_menu"]
     new_reply_markup = InlineKeyboardMarkup(keyboard)
@@ -251,31 +256,26 @@ async def settings_rounding(update: Update, context: ContextTypes.DEFAULT_TYPE):
     current_language = context.user_data.get('language', DEFAULT_LANGUAGE)
     current_rounding = context.user_data.get('rounding', DEFAULT_ROUNDING)
 
-    keyboard = [
-        [
-            InlineKeyboardButton(
-                "→ 4 ←", callback_data="4") 
-                if current_rounding == "4" else InlineKeyboardButton(
-                    "4", callback_data="4"),
-            InlineKeyboardButton(
-                "→ 6 ←", callback_data="6") 
-                if current_rounding == "6" else InlineKeyboardButton(
-                    "6", callback_data="6"),
-            InlineKeyboardButton(
-                "→ 8 ←", callback_data="8") 
-                if current_rounding == "8" else InlineKeyboardButton(
-                    "8", callback_data="8"),
-        ],
-        [InlineKeyboardButton(
-            f"→ {LANG_TEXTS[current_language]["without_rounding"]} ←",
-            callback_data="16")
-            if current_rounding == "16" else InlineKeyboardButton(
-                LANG_TEXTS[current_language]["without_rounding"],
-                callback_data="16")],
-        [InlineKeyboardButton(
+    roundings = ["4", "6", "8"]
+
+    keyboard = []
+
+    row = []
+    for rounding in roundings:
+        text = f"→ {rounding} ←" if current_rounding == rounding else rounding
+        row.append(InlineKeyboardButton(text, callback_data=rounding))
+    keyboard.append(row)
+
+    no_rounding_text = LANG_TEXTS[current_language]["without_rounding"]
+    text = f"→ {no_rounding_text} ←" if current_rounding == "16" else no_rounding_text
+    keyboard.append([InlineKeyboardButton(text, callback_data="16")])
+
+    keyboard.append([
+        InlineKeyboardButton(
             LANG_TEXTS[current_language]["back"],
-            callback_data="settings_back")]
-    ]
+            callback_data="settings_back"
+        )
+    ])
 
     new_text = LANG_TEXTS[current_language]["settings_menu"]
     new_reply_markup = InlineKeyboardMarkup(keyboard)
