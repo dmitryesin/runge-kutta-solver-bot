@@ -145,26 +145,41 @@ async def settings(update: Update, context: ContextTypes.DEFAULT_TYPE):
     current_hints = context.user_data.get('hints', DEFAULT_HINTS)
 
     keyboard = [
-        [InlineKeyboardButton(
-            LANG_TEXTS[current_language]["change_method"],
-            callback_data="settings_method")],
-        [InlineKeyboardButton(
-            LANG_TEXTS[current_language]["change_rounding"],
-            callback_data="settings_rounding")],
-        [InlineKeyboardButton(
-            LANG_TEXTS[current_language]["change_language"],
-            callback_data="settings_language")],
-        [InlineKeyboardButton(
-            LANG_TEXTS[current_language]["hints_switch"] + " " +
-            LANG_TEXTS[current_language]["hints_switch_on"],
-            callback_data="true")
-            if current_hints == "true" else InlineKeyboardButton(
+        [
+            InlineKeyboardButton(
+                LANG_TEXTS[current_language]["change_method"],
+                callback_data="settings_method"
+            )
+        ],
+        [
+            InlineKeyboardButton(
+                LANG_TEXTS[current_language]["change_rounding"],
+                callback_data="settings_rounding"
+            )
+        ],
+        [
+            InlineKeyboardButton(
+                LANG_TEXTS[current_language]["change_language"],
+                callback_data="settings_language"
+            )
+        ],
+        [
+            InlineKeyboardButton(
+                LANG_TEXTS[current_language]["hints_switch"] + " " +
+                LANG_TEXTS[current_language]["hints_switch_on"],
+                callback_data="true"
+            ) if current_hints == "true" else InlineKeyboardButton(
                 LANG_TEXTS[current_language]["hints_switch"] + " " +
                 LANG_TEXTS[current_language]["hints_switch_off"],
-                callback_data="false")],
-        [InlineKeyboardButton(
-            LANG_TEXTS[current_language]["back"],
-            callback_data="back")]
+                callback_data="false"
+            )
+        ],
+        [
+            InlineKeyboardButton(
+                LANG_TEXTS[current_language]["back"],
+                callback_data="back"
+            )
+        ]
     ]
 
     new_text = LANG_TEXTS[current_language]["settings_menu"]
