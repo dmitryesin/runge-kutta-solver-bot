@@ -44,7 +44,7 @@ with open(languages_path, "r", encoding="utf-8") as f:
 
 MENU, EQUATION, INITIAL_X, INITIAL_Y, REACH_POINT, STEP_SIZE = range(6)
 
-DEFAULT_METHOD = "method_runge_kutta"
+DEFAULT_METHOD = "runge_kutta"
 DEFAULT_ROUNDING = "4"
 DEFAULT_LANGUAGE = "en"
 DEFAULT_HINTS = "true"
@@ -88,15 +88,18 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         [
             InlineKeyboardButton(
                 LANG_TEXTS[current_language]["solve"],
-                callback_data="solve"),
+                callback_data="solve"
+            ),
             InlineKeyboardButton(
                 LANG_TEXTS[current_language]["settings"],
-                callback_data="settings")
+                callback_data="settings"
+            )
         ],
         [
             InlineKeyboardButton(
                 LANG_TEXTS[current_language]["solve_history"],
-                callback_data="solve_history")
+                callback_data="solve_history"
+            )
         ]
     ]
 
@@ -142,26 +145,41 @@ async def settings(update: Update, context: ContextTypes.DEFAULT_TYPE):
     current_hints = context.user_data.get('hints', DEFAULT_HINTS)
 
     keyboard = [
-        [InlineKeyboardButton(
-            LANG_TEXTS[current_language]["change_method"],
-            callback_data="settings_method")],
-        [InlineKeyboardButton(
-            LANG_TEXTS[current_language]["change_rounding"],
-            callback_data="settings_rounding")],
-        [InlineKeyboardButton(
-            LANG_TEXTS[current_language]["change_language"],
-            callback_data="settings_language")],
-        [InlineKeyboardButton(
-            LANG_TEXTS[current_language]["hints_switch"] + " " +
-            LANG_TEXTS[current_language]["hints_switch_on"],
-            callback_data="true")
-            if current_hints == "true" else InlineKeyboardButton(
+        [
+            InlineKeyboardButton(
+                LANG_TEXTS[current_language]["change_method"],
+                callback_data="settings_method"
+            )
+        ],
+        [
+            InlineKeyboardButton(
+                LANG_TEXTS[current_language]["change_rounding"],
+                callback_data="settings_rounding"
+            )
+        ],
+        [
+            InlineKeyboardButton(
+                LANG_TEXTS[current_language]["change_language"],
+                callback_data="settings_language"
+            )
+        ],
+        [
+            InlineKeyboardButton(
+                LANG_TEXTS[current_language]["hints_switch"] + " " +
+                LANG_TEXTS[current_language]["hints_switch_on"],
+                callback_data="true"
+            ) if current_hints == "true" else InlineKeyboardButton(
                 LANG_TEXTS[current_language]["hints_switch"] + " " +
                 LANG_TEXTS[current_language]["hints_switch_off"],
-                callback_data="false")],
-        [InlineKeyboardButton(
-            LANG_TEXTS[current_language]["back"],
-            callback_data="back")]
+                callback_data="false"
+            )
+        ],
+        [
+            InlineKeyboardButton(
+                LANG_TEXTS[current_language]["back"],
+                callback_data="back"
+            )
+        ]
     ]
 
     new_text = LANG_TEXTS[current_language]["settings_menu"]
@@ -201,35 +219,23 @@ async def settings_method(update: Update, context: ContextTypes.DEFAULT_TYPE):
     current_language = context.user_data.get('language', DEFAULT_LANGUAGE)
     current_method = context.user_data.get('method', DEFAULT_METHOD)
 
-    keyboard = [
-        [InlineKeyboardButton(
-            f"→ {LANG_TEXTS[current_language]["method_euler"]} ←",
-            callback_data="method_euler")
-            if current_method == "method_euler" else InlineKeyboardButton(
-                LANG_TEXTS[current_language]["method_euler"],
-                callback_data="method_euler")],
-        [InlineKeyboardButton(
-            f"→ {LANG_TEXTS[current_language]["method_modified_euler"]} ←",
-            callback_data="method_modified_euler")
-            if current_method == "method_modified_euler" else InlineKeyboardButton(
-                LANG_TEXTS[current_language]["method_modified_euler"],
-                callback_data="method_modified_euler")],
-        [InlineKeyboardButton(
-            f"→ {LANG_TEXTS[current_language]["method_runge_kutta"]} ←",
-            callback_data="method_runge_kutta")
-            if current_method == "method_runge_kutta" else InlineKeyboardButton(
-                LANG_TEXTS[current_language]["method_runge_kutta"],
-                callback_data="method_runge_kutta")],
-        [InlineKeyboardButton(
-            f"→ {LANG_TEXTS[current_language]["method_dormand_prince"]} ←",
-            callback_data="method_dormand_prince")
-            if current_method == "method_dormand_prince" else InlineKeyboardButton(
-                LANG_TEXTS[current_language]["method_dormand_prince"],
-                callback_data="method_dormand_prince")],
-        [InlineKeyboardButton(
+    methods = ["euler", "midpoint", "heun", "runge_kutta", "dormand_prince"]
+
+    numerical_texts = LANG_TEXTS[current_language]["numerical_methods"]
+
+    keyboard = []
+
+    for method in methods:
+        method_name = numerical_texts[method]
+        text = f"→ {method_name} ←" if current_method == method else method_name
+        keyboard.append([InlineKeyboardButton(text, callback_data=method)])
+
+    keyboard.append([
+        InlineKeyboardButton(
             LANG_TEXTS[current_language]["back"],
-            callback_data="settings_back")]
-    ]
+            callback_data="settings_back"
+        )
+    ])
 
     new_text = LANG_TEXTS[current_language]["settings_menu"]
     new_reply_markup = InlineKeyboardMarkup(keyboard)
@@ -268,31 +274,26 @@ async def settings_rounding(update: Update, context: ContextTypes.DEFAULT_TYPE):
     current_language = context.user_data.get('language', DEFAULT_LANGUAGE)
     current_rounding = context.user_data.get('rounding', DEFAULT_ROUNDING)
 
-    keyboard = [
-        [
-            InlineKeyboardButton(
-                "→ 4 ←", callback_data="4") 
-                if current_rounding == "4" else InlineKeyboardButton(
-                    "4", callback_data="4"),
-            InlineKeyboardButton(
-                "→ 6 ←", callback_data="6") 
-                if current_rounding == "6" else InlineKeyboardButton(
-                    "6", callback_data="6"),
-            InlineKeyboardButton(
-                "→ 8 ←", callback_data="8") 
-                if current_rounding == "8" else InlineKeyboardButton(
-                    "8", callback_data="8"),
-        ],
-        [InlineKeyboardButton(
-            f"→ {LANG_TEXTS[current_language]["without_rounding"]} ←",
-            callback_data="16")
-            if current_rounding == "16" else InlineKeyboardButton(
-                LANG_TEXTS[current_language]["without_rounding"],
-                callback_data="16")],
-        [InlineKeyboardButton(
+    roundings = ["4", "6", "8"]
+
+    keyboard = []
+
+    row = []
+    for rounding in roundings:
+        text = f"→ {rounding} ←" if current_rounding == rounding else rounding
+        row.append(InlineKeyboardButton(text, callback_data=rounding))
+    keyboard.append(row)
+
+    no_rounding_text = LANG_TEXTS[current_language]["without_rounding"]
+    text = f"→ {no_rounding_text} ←" if current_rounding == "16" else no_rounding_text
+    keyboard.append([InlineKeyboardButton(text, callback_data="16")])
+
+    keyboard.append([
+        InlineKeyboardButton(
             LANG_TEXTS[current_language]["back"],
-            callback_data="settings_back")]
-    ]
+            callback_data="settings_back"
+        )
+    ])
 
     new_text = LANG_TEXTS[current_language]["settings_menu"]
     new_reply_markup = InlineKeyboardMarkup(keyboard)
@@ -330,23 +331,24 @@ async def settings_language(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     current_language = context.user_data.get('language', DEFAULT_LANGUAGE)
 
-    keyboard = [
-        [InlineKeyboardButton(
-            "→ English ←", callback_data="en") 
-            if current_language == "en" else InlineKeyboardButton(
-                "English", callback_data="en")],
-        [InlineKeyboardButton(
-            "→ Русский ←", callback_data="ru") 
-            if current_language == "ru" else InlineKeyboardButton(
-                "Русский", callback_data="ru")],
-        [InlineKeyboardButton(
-            "→ 中文 ←", callback_data="zh") 
-            if current_language == "zh" else InlineKeyboardButton(
-                "中文", callback_data="zh")],
-        [InlineKeyboardButton(
-            LANG_TEXTS[current_language]["back"],
-            callback_data="settings_back")]
+    languages = [
+        ("en", "English"),
+        ("ru", "Русский"),
+        ("zh", "中文")
     ]
+
+    keyboard = []
+
+    for language_callback, language in languages:
+        text = f"→ {language} ←" if current_language == language_callback else language
+        keyboard.append([InlineKeyboardButton(text, callback_data=language_callback)])
+
+    keyboard.append([
+        InlineKeyboardButton(
+            LANG_TEXTS[current_language]["back"],
+            callback_data="settings_back"
+        )
+    ])
 
     new_text = LANG_TEXTS[current_language]["settings_menu"]
     new_reply_markup = InlineKeyboardMarkup(keyboard)
@@ -472,10 +474,11 @@ async def solve_history_details(update: Update, context: ContextTypes.DEFAULT_TY
             initial_y_str = str(initial_y)
 
         method_mapping = {
-            1: LANG_TEXTS[current_language]["method_euler"],
-            2: LANG_TEXTS[current_language]["method_modified_euler"],
-            4: LANG_TEXTS[current_language]["method_runge_kutta"],
-            7: LANG_TEXTS[current_language]["method_dormand_prince"]
+            "euler": LANG_TEXTS[current_language]["numerical_methods"]["euler"],
+            "midpoint": LANG_TEXTS[current_language]["numerical_methods"]["midpoint"],
+            "heun": LANG_TEXTS[current_language]["numerical_methods"]["heun"],
+            "rungeKutta": LANG_TEXTS[current_language]["numerical_methods"]["runge_kutta"],
+            "dormandPrince": LANG_TEXTS[current_language]["numerical_methods"]["dormand_prince"]
         }
 
         method_display = method_mapping.get(method, method)
@@ -491,12 +494,12 @@ async def solve_history_details(update: Update, context: ContextTypes.DEFAULT_TY
             f"{print_solution(solution, order, current_rounding)}"
         )
 
-        keyboard = [
-            [InlineKeyboardButton(
+        keyboard = [[
+            InlineKeyboardButton(
                 LANG_TEXTS[current_language]["back"],
                 callback_data="solve_history_back"
-            )]
-        ]
+            )
+        ]]
 
         media = InputMediaPhoto(
             media=plot_graph,
@@ -782,12 +785,18 @@ async def solution(update: Update, context: ContextTypes.DEFAULT_TYPE):
     current_language = context.user_data.get('language', DEFAULT_LANGUAGE)
 
     keyboard = [
-        [InlineKeyboardButton(
-            LANG_TEXTS[current_language]["solve_over"],
-            callback_data="solve")],
-        [InlineKeyboardButton(
-            LANG_TEXTS[current_language]["menu"],
-            callback_data="menu")]
+        [
+            InlineKeyboardButton(
+                LANG_TEXTS[current_language]["solve_over"],
+                callback_data="solve"
+            )
+        ],
+        [
+            InlineKeyboardButton(
+                LANG_TEXTS[current_language]["menu"],
+                callback_data="menu"
+            )
+        ]
     ]
 
     new_reply_markup = InlineKeyboardMarkup(keyboard)
@@ -901,12 +910,18 @@ async def cancel(update: Update, context: ContextTypes.DEFAULT_TYPE):
         current_language = context.user_data.get('language', DEFAULT_LANGUAGE)
 
         keyboard = [
-            [InlineKeyboardButton(
-                LANG_TEXTS[current_language]["solve_over"],
-                callback_data="solve")],
-            [InlineKeyboardButton(
-                LANG_TEXTS[current_language]["menu"],
-                callback_data="menu")]
+            [
+                InlineKeyboardButton(
+                    LANG_TEXTS[current_language]["solve_over"],
+                    callback_data="solve"
+                )
+            ],
+            [
+                InlineKeyboardButton(
+                    LANG_TEXTS[current_language]["menu"],
+                    callback_data="menu"
+                )
+            ]
         ]
 
         new_reply_markup = InlineKeyboardMarkup(keyboard)
@@ -952,7 +967,7 @@ def main() -> None:
                 CallbackQueryHandler(settings_language, pattern="^settings_language$"),
                 CallbackQueryHandler(
                     method,
-                    pattern="^method_(euler|modified_euler|runge_kutta|dormand_prince)$"
+                    pattern="^(euler|midpoint|heun|runge_kutta|dormand_prince)$"
                 ),
                 CallbackQueryHandler(rounding, pattern="^(4|6|8|16)$"),
                 CallbackQueryHandler(language, pattern="^(en|ru|zh)$"),

@@ -15,14 +15,15 @@ async def set_parameters(
     initial_x, initial_y, reach_point, step_size
 ):
     method_mapping = {
-        "method_euler": 1,
-        "method_modified_euler": 2,
-        "method_runge_kutta": 4,
-        "method_dormand_prince": 7
+        "euler": "euler",
+        "midpoint": "midpoint",
+        "heun": "heun",
+        "runge_kutta": "rungeKutta",
+        "dormand_prince": "dormandPrince",
     }
 
     payload = {
-        "method": method_mapping.get(method, 1),
+        "method": method_mapping.get(method, "euler"),
         "order": int(order),
         "userEquation": user_equation,
         "formattedEquation": formatted_equation,
@@ -190,16 +191,6 @@ async def get_application_status(application_id):
     async with ClientSession(timeout=timeout) as session:
         async with session.get(
             f"{os.getenv("CLIENT_API_URL")}/applications/{application_id}/status"
-        ) as response:
-            response.raise_for_status()
-            return await response.text()
-
-
-async def get_result_exists(application_id):
-    timeout = ClientTimeout(total=REQUEST_TIMEOUT)
-    async with ClientSession(timeout=timeout) as session:
-        async with session.get(
-            f"{os.getenv("CLIENT_API_URL")}/results/{application_id}"
         ) as response:
             response.raise_for_status()
             return await response.text()

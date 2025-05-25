@@ -45,7 +45,7 @@ services:
       - solver-network
 
   solver-db:
-    image: postgres:17.5
+    image: postgres:17.5-alpine
     container_name: diffy-bot-db-container
     environment:
       POSTGRES_USER: ${DB_USERNAME}
@@ -55,7 +55,7 @@ services:
       - "5433:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
-      - ./database/schema.sql:/docker-entrypoint-initdb.d/init.sql
+      - ./database/schema.sql:/docker-entrypoint-initdb.d/init.sql:ro
     networks:
       - solver-network
 

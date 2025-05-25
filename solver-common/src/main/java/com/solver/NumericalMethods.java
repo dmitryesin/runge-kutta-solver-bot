@@ -3,7 +3,7 @@ package com.solver;
 import java.util.function.BiFunction;
 
 public class NumericalMethods {
-    public static double[] methodDormandPrince(BiFunction<Double, double[], double[]> f, double x_0, double[] y_0, double h) {
+    public static double[] dormandPrince(BiFunction<Double, double[], double[]> f, double x_0, double[] y_0, double h) {
         double[] k1 = new double[y_0.length];
         double[] k2 = new double[y_0.length];
         double[] k3 = new double[y_0.length];
@@ -53,7 +53,7 @@ public class NumericalMethods {
         return result;
     }    
 
-    public static double[] methodRungeKutta(BiFunction<Double, double[], double[]> f, double x_0, double[] y_0, double h) {
+    public static double[] rungeKutta(BiFunction<Double, double[], double[]> f, double x_0, double[] y_0, double h) {
         double[] k1 = new double[y_0.length];
         double[] k2 = new double[y_0.length];
         double[] k3 = new double[y_0.length];
@@ -81,7 +81,30 @@ public class NumericalMethods {
         return result;
     }
 
-    public static double[] methodEulerImproved(BiFunction<Double, double[], double[]> f, double x_0, double[] y_0, double h) {
+    public static double[] heun(BiFunction<Double, double[], double[]> f, double x_0, double[] y_0, double h) {
+        double[] y_next = new double[y_0.length];
+
+        double[] k1 = f.apply(x_0, y_0);
+        double[] temp = new double[y_0.length];
+
+        for (int i = 0; i < y_0.length; i++) {
+            temp[i] = y_0[i] + h * k1[i];
+        }
+
+        double[] k2 = f.apply(x_0 + h, temp);
+
+        for (int i = 0; i < y_0.length; i++) {
+            y_next[i] = y_0[i] + (h / 2) * (k1[i] + k2[i]);
+        }
+
+        double[] result = new double[y_0.length + 1];
+        result[0] = x_0 + h;
+        System.arraycopy(y_next, 0, result, 1, y_0.length);
+
+        return result;
+    }
+
+    public static double[] midpoint(BiFunction<Double, double[], double[]> f, double x_0, double[] y_0, double h) {
         double[] y_next = new double[y_0.length];
 
         double[] k1 = f.apply(x_0, y_0);
@@ -104,7 +127,7 @@ public class NumericalMethods {
         return result;
     }
 
-    public static double[] methodEuler(BiFunction<Double, double[], double[]> f, double x_0, double[] y_0, double h) {
+    public static double[] euler(BiFunction<Double, double[], double[]> f, double x_0, double[] y_0, double h) {
         double[] y_next = new double[y_0.length];
 
         double[] k1 = f.apply(x_0, y_0);
