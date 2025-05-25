@@ -95,7 +95,7 @@ async def get_recent_applications(user_id):
     timeout = ClientTimeout(total=REQUEST_TIMEOUT)
     async with ClientSession(timeout=timeout) as session:
         async with session.get(
-            f"{os.getenv("CLIENT_API_URL")}/applications/list/{user_id}"
+            f"{os.getenv("CLIENT_API_URL")}/applications/{user_id}"
         ) as response:
             if response.status == 500:
                 return []
@@ -132,58 +132,19 @@ async def get_recent_applications(user_id):
             return []
 
 
-async def get_solution(application_id):
+async def get_results(application_id):
     timeout = ClientTimeout(total=REQUEST_TIMEOUT)
     async with ClientSession(timeout=timeout) as session:
         async with session.get(
-            f"{os.getenv("CLIENT_API_URL")}/results/{application_id}/solution"
+            f"{os.getenv("CLIENT_API_URL")}/results/{application_id}"
         ) as response:
-            if response.status == 500:
-                return []
-
             response.raise_for_status()
             text = await response.text()
             try:
                 data = json.loads(text)
             except json.JSONDecodeError:
-                raise ValueError(f"Failed to parse solution data: {text}")
-            return np.array(data)
-
-
-async def get_x_values(application_id):
-    timeout = ClientTimeout(total=REQUEST_TIMEOUT)
-    async with ClientSession(timeout=timeout) as session:
-        async with session.get(
-            f"{os.getenv("CLIENT_API_URL")}/results/{application_id}/xvalues"
-        ) as response:
-            if response.status == 500:
-                return []
-
-            response.raise_for_status()
-            text = await response.text()
-            try:
-                data = json.loads(text)
-            except json.JSONDecodeError:
-                raise ValueError(f"Failed to parse x-values data: {text}")
-            return np.array(data)
-
-
-async def get_y_values(application_id):
-    timeout = ClientTimeout(total=REQUEST_TIMEOUT)
-    async with ClientSession(timeout=timeout) as session:
-        async with session.get(
-            f"{os.getenv("CLIENT_API_URL")}/results/{application_id}/yvalues"
-        ) as response:
-            if response.status == 500:
-                return []
-
-            response.raise_for_status()
-            text = await response.text()
-            try:
-                data = json.loads(text)
-            except json.JSONDecodeError:
-                raise ValueError(f"Failed to parse y-values data: {text}")
-            return np.array(data)
+                return text
+            return data
 
 
 async def get_application_status(application_id):
