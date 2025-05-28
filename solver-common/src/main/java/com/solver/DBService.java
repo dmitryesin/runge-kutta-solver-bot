@@ -283,7 +283,7 @@ public class DBService {
     }
 
     @Async
-    @Scheduled(cron = "0 */15 * * * *") // Every 15 minutes
+    @Scheduled(cron = "0 0 0,12 * * *") // Runs every day at midnight and noon
     @Transactional
     public CompletableFuture<Void> cleanOldApplications() {
         logger.debug("Starting scheduled cleanup of old applications");
