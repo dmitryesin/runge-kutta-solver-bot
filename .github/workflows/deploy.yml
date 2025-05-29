@@ -27,7 +27,7 @@ jobs:
       - name: Install Maven
         run: |
           sudo apt-get update && \
-          sudo apt-get install -y --no-install-recommends maven && \
+          sudo apt-get install -y --no-install-recommends maven
       - name: Run Maven tests
         run: |
           # Run Maven tests
