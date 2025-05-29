@@ -11,6 +11,7 @@ services:
       - "8001:8000"
     volumes:
       - ./solver-bot/src:/solver-client/src
+      - .env:/solver-client/.env
     depends_on:
       - diffy-bot-db
       - diffy-bot-server
@@ -36,6 +37,7 @@ services:
       - "8081:8080"
     volumes:
       - ./solver-common/src:/solver-server/src
+      - .env:/solver-server/.env
     depends_on:
       - diffy-bot-db
     networks:
