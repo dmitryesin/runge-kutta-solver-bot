@@ -28,8 +28,6 @@ jobs:
         run: |
           sudo apt-get update && \
           sudo apt-get install -y --no-install-recommends maven && \
-          sudo apt-get clean && \
-          rm -rf /var/lib/apt/lists/*
       - name: Run Maven tests
         run: |
           # Run Maven tests
