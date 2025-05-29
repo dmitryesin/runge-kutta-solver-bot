@@ -110,7 +110,7 @@ public class SolverController {
                     .orElseThrow(() -> new SolverException("Application status not found for applicationId: " + applicationId)));
     }
 
-    @GetMapping("/applications/list/{userId}")
+    @GetMapping("/applications/{userId}")
     public CompletableFuture<ResponseEntity<List<Map<String, Object>>>> getApplications(@PathVariable("userId") Integer userId) {
         logger.debug("Getting applications list for userId: {}", userId);
         return dbService.getApplications(userId)
@@ -122,30 +122,15 @@ public class SolverController {
                 });
     }
 
-    @GetMapping("/results/{applicationId}/solution")
-    public CompletableFuture<ResponseEntity<double[]>> getSolution(@PathVariable("applicationId") int applicationId) {
-        logger.debug("Getting solution for applicationId: {}", applicationId);
-        return dbService.getSolution(applicationId)
-                .thenApply(optionalSolution -> optionalSolution
-                    .map(ResponseEntity::ok)
-                    .orElseThrow(() -> new SolverException("Solution not found for applicationId: " + applicationId)));
-    }
-
-    @GetMapping("/results/{applicationId}/xvalues")
-    public CompletableFuture<ResponseEntity<List<Double>>> getXValues(@PathVariable("applicationId") int applicationId) {
-        logger.debug("Getting x values for applicationId: {}", applicationId);
-        return dbService.getXValues(applicationId)
-                .thenApply(optionalXValues -> optionalXValues
-                    .map(ResponseEntity::ok)
-                    .orElseThrow(() -> new SolverException("xValues not found for applicationId: " + applicationId)));
-    }
-
-    @GetMapping("/results/{applicationId}/yvalues")
-    public CompletableFuture<ResponseEntity<List<double[]>>> getYValues(@PathVariable("applicationId") int applicationId) {
-        logger.debug("Getting y values for applicationId: {}", applicationId);
-        return dbService.getYValues(applicationId)
-                .thenApply(optionalYValues -> optionalYValues
-                    .map(ResponseEntity::ok)
-                    .orElseThrow(() -> new SolverException("yValues not found for applicationId: " + applicationId)));
+    @GetMapping("/results/{applicationId}")
+    public CompletableFuture<ResponseEntity<List<Map<String, Object>>>> getResults(@PathVariable("applicationId") Integer applicationId) {
+        logger.debug("Getting results for applicationId: {}", applicationId);
+        return dbService.getResults(applicationId)
+                .thenApply(results -> {
+                    if (results.isEmpty()) {
+                        throw new SolverException("Results not found for applicationId: " + applicationId);
+                    }
+                    return ResponseEntity.ok(results);
+                });
     }
 }
