@@ -1,0 +1,61 @@
+name: Deploy
+
+on:
+  push:
+    branches:
+      - develop
+      - main
+  workflow_dispatch:
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Log in to Docker Registry
+        if: github.ref == 'refs/heads/main'
+        uses: docker/login-action@v2
+        with:
+          registry: docker.io
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_PASSWORD }}
+
+      - name: Build diffy-bot-client Image
+        run: |
+          docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/diffy-bot-client:latest -f solver-bot/Dockerfile .
+
+      - name: Build diffy-bot-server Image
+        run: |
+          docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/diffy-bot-server:latest -f solver-common/Dockerfile .
+
+      - name: Push diffy-bot-client Image
+        if: github.ref == 'refs/heads/main'
+        run: |
+          docker push ${{ secrets.DOCKERHUB_USERNAME }}/diffy-bot-client:latest
+
+      - name: Push diffy-bot-server Image
+        if: github.ref == 'refs/heads/main'
+        run: |
+          docker push ${{ secrets.DOCKERHUB_USERNAME }}/diffy-bot-server:latest
+
+  deploy:
+    needs: build-and-push
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Create .env file from secrets
+        run: |
+          echo "CLIENT_API_KEY=${{ secrets.CLIENT_API_KEY }}" >> .env
+          echo "DB_CONNECTION=${{ secrets.DB_CONNECTION }}" >> .env
+          echo "DB_PORT=${{ secrets.DB_PORT }}" >> .env
+          echo "DB_DATABASE=${{ secrets.DB_DATABASE }}" >> .env
+          echo "DB_USERNAME=${{ secrets.DB_USERNAME }}" >> .env
+          echo "DB_PASSWORD=${{ secrets.DB_PASSWORD }}" >> .env
+
+      - name: Run Docker Compose
+        run: |
+          docker compose -f docker-compose.yml pull || true
+          docker compose -f docker-compose.yml up -d

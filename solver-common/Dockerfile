@@ -11,7 +11,6 @@ COPY solver-common/pom.xml .
 RUN mvn dependency:go-offline
 
 COPY solver-common .
-COPY .env .
 RUN mvn clean package -DskipTests -B
 
 FROM openjdk:21-slim
@@ -19,6 +18,5 @@ FROM openjdk:21-slim
 WORKDIR /solver-server
 
 COPY --from=builder /solver-server/target/solver-0.1.0-alpha.jar /solver-server/target/solver-0.1.0-alpha.jar
-COPY --from=builder /solver-server/.env /solver-server/.env
 
 CMD ["java", "-jar", "target/solver-0.1.0-alpha.jar"]
