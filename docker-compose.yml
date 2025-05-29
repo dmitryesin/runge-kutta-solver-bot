@@ -28,7 +28,7 @@ services:
       - .env
     environment:
       - DB_CONNECTION=${DB_CONNECTION}
-      - DB_HOST=diffy-bot-db-container
+      - DB_HOST=diffy-bot-db
       - DB_PORT=${DB_PORT}
       - DB_DATABASE=${DB_DATABASE}
       - DB_USERNAME=${DB_USERNAME}
