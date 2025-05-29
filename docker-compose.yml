@@ -1,30 +1,27 @@
 services:
-  solver-bot:
-    build:
-      context: .
-      dockerfile: solver-bot/Dockerfile
-    container_name: diffy-bot-client-container
+  diffy-bot-client:
+    container_name: diffy-bot-client
     working_dir: /solver-client
     env_file:
       - .env
     environment:
       - CLIENT_API_KEY=${CLIENT_API_KEY}
-      - CLIENT_API_URL=http://solver-common:8080/api/solver
+      - CLIENT_API_URL=http://diffy-bot-server:8080/api/solver
     ports:
       - "8001:8000"
     volumes:
       - ./solver-bot/src:/solver-client/src
     depends_on:
-      - solver-db
-      - solver-common
+      - diffy-bot-db
+      - diffy-bot-server
     networks:
       - solver-network
-
-  solver-common:
     build:
       context: .
-      dockerfile: solver-common/Dockerfile
-    container_name: diffy-bot-server-container
+      dockerfile: solver-bot/Dockerfile
+
+  diffy-bot-server:
+    container_name: diffy-bot-server
     working_dir: /solver-server
     env_file:
       - .env
@@ -40,13 +37,16 @@ services:
     volumes:
       - ./solver-common/src:/solver-server/src
     depends_on:
-      - solver-db
+      - diffy-bot-db
     networks:
       - solver-network
+    build:
+      context: .
+      dockerfile: solver-common/Dockerfile
 
-  solver-db:
+  diffy-bot-db:
     image: postgres:17.5-alpine
-    container_name: diffy-bot-db-container
+    container_name: diffy-bot-db
     environment:
       POSTGRES_USER: ${DB_USERNAME}
       POSTGRES_PASSWORD: ${DB_PASSWORD}
