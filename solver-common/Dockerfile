@@ -17,6 +17,6 @@ FROM openjdk:21-slim
 
 WORKDIR /solver-server
 
-COPY --from=builder /solver-server/target/solver-0.1.0-alpha.jar /solver-server/target/solver-0.1.0-alpha.jar
+COPY --from=builder /solver-server/target/solver-0.1.1-alpha.jar /solver-server/target/solver-0.1.1-alpha.jar
 
-CMD ["java", "-jar", "target/solver-0.1.0-alpha.jar"]
+CMD ["java", "-jar", "target/solver-0.1.1-alpha.jar"]
