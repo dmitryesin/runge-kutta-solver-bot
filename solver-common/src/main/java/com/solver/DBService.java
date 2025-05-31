@@ -1,7 +1,5 @@
 package com.solver;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataAccessException;
@@ -12,7 +10,6 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
 import java.util.concurrent.CompletableFuture;
 import java.util.HashMap;
 import java.util.List;
@@ -147,80 +144,25 @@ public class DBService {
 
     @Async
     @Transactional
-    public CompletableFuture<Optional<List<Double>>> getXValues(int applicationId) {
-        logger.debug("Fetching x values for applicationId: {}", applicationId);
+    public CompletableFuture<List<Map<String, Object>>> getResults(Integer applicationId) {
+        logger.debug("Fetching results for applicationId: {}", applicationId);
         return CompletableFuture.supplyAsync(() -> {
             String query = """
-                SELECT jsonb_array_elements_text(data->'xvalues')::double precision AS x_value
+                SELECT id, data, created_at
                 FROM results
                 WHERE application_id = ?
                 """;
             try {
-                List<Double> xValues = jdbcTemplate.queryForList(query, Double.class, applicationId);
-                return xValues.isEmpty() ? Optional.empty() : Optional.of(xValues);
+                return jdbcTemplate.query(query, (rs, rowNum) -> {
+                    Map<String, Object> result = new HashMap<>();
+                    result.put("id", rs.getInt("id"));
+                    result.put("data", rs.getString("data"));
+                    result.put("created_at", rs.getString("created_at"));
+                    return result;
+                }, applicationId);
             } catch (DataAccessException e) {
-                logger.error("Database error while fetching x values for applicationId: {}", applicationId, e);
-                throw new SolverException("Failed to fetch x values", e);
-            }
-        });
-    }
-
-    @Async
-    @Transactional
-    public CompletableFuture<Optional<List<double[]>>> getYValues(int applicationId) {
-        logger.debug("Fetching y values for applicationId: {}", applicationId);
-        return CompletableFuture.supplyAsync(() -> {
-            String query = """
-                SELECT jsonb_array_elements(data->'yvalues')::jsonb AS y_value
-                FROM results
-                WHERE application_id = ?
-                """;
-            try {
-                List<String> yValuesJson = jdbcTemplate.queryForList(query, String.class, applicationId);
-                if (yValuesJson.isEmpty()) {
-                    return Optional.empty();
-                }
-                
-                ObjectMapper objectMapper = new ObjectMapper();
-                List<double[]> yValues = new ArrayList<>();
-                for (String json : yValuesJson) {
-                    yValues.add(objectMapper.readValue(json, double[].class));
-                }
-                return Optional.of(yValues);
-            } catch (DataAccessException e) {
-                logger.error("Database error while fetching y values for applicationId: {}", applicationId, e);
-                throw new SolverException("Failed to fetch y values", e);
-            } catch (JsonProcessingException e) {
-                logger.error("JSON processing error while parsing y values for applicationId: {}", applicationId, e);
-                throw new SolverException("Failed to parse y values", e);
-            }
-        });
-    }
-
-    @Async
-    @Transactional
-    public CompletableFuture<Optional<double[]>> getSolution(int applicationId) {
-        logger.debug("Fetching solution for applicationId: {}", applicationId);
-        return CompletableFuture.supplyAsync(() -> {
-            String query = """
-                SELECT data->>'solution' AS solution
-                FROM results
-                WHERE application_id = ?
-                """;
-            try {
-                List<String> solutions = jdbcTemplate.queryForList(query, String.class, applicationId);
-                if (solutions.isEmpty()) {
-                    return Optional.empty();
-                }
-                
-                ObjectMapper objectMapper = new ObjectMapper();
-                return Optional.of(objectMapper.readValue(solutions.getFirst(), double[].class));
-            } catch (DataAccessException e) {
-                logger.error("Database error while fetching solution for applicationId: {}", applicationId, e);
-                throw new SolverException("Failed to fetch solution", e);
-            } catch (JsonProcessingException e) {
-                logger.error("JSON processing error while parsing solution for applicationId: {}", applicationId, e);
-                throw new SolverException("Failed to parse solution", e);
+                logger.error("Database error while fetching results for applicationId: {}", applicationId, e);
+                throw new SolverException("Failed to fetch results", e);
             }
         });
     }
@@ -283,7 +225,7 @@ public class DBService {
     }
 
     @Async
-    @Scheduled(cron = "0 */15 * * * *") // Every 15 minutes
+    @Scheduled(cron = "0 0 0,12 * * *") // Runs every day at midnight and noon
     @Transactional
     public CompletableFuture<Void> cleanOldApplications() {
         logger.debug("Starting scheduled cleanup of old applications");

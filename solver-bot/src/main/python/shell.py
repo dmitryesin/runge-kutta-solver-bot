@@ -10,10 +10,8 @@ from spring_client import (
     set_parameters,
     set_user_settings,
     get_user_settings,
-    get_x_values,
-    get_y_values,
-    get_solution,
     get_recent_applications,
+    get_results,
     wait_for_application_completion)
 from equation.equation_parser import format_equation
 from equation.equation_validator import (
@@ -450,6 +448,7 @@ async def solve_history_details(update: Update, context: ContextTypes.DEFAULT_TY
 
     application = recent_applications[application_index]
     application_id = application.get('id')
+    results = await get_results(application_id)
 
     try:
         parameters = json.loads(application.get("parameters", "{}"))
@@ -462,9 +461,10 @@ async def solve_history_details(update: Update, context: ContextTypes.DEFAULT_TY
         reach_point = parameters.get("reachPoint", "")
         step_size = parameters.get("stepSize", "")
 
-        x_values = await get_x_values(application_id)
-        y_values = await get_y_values(application_id)
-        solution = await get_solution(application_id)
+        data = json.loads(results[0].get("data", "{}"))
+        x_values = data.get("xvalues", [])
+        y_values = data.get("yvalues", [])
+        solution = data.get("solution", "")
 
         plot_graph = plot_solution(x_values, y_values, order)
 
@@ -839,10 +839,13 @@ async def solution(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
         return MENU
 
+    results = await get_results(application_id)
+
     try:
-        result = await get_solution(application_id)
-        x_values = await get_x_values(application_id)
-        y_values = await get_y_values(application_id)
+        data = json.loads(results[0].get("data", "{}"))
+        x_values = data.get("xvalues", [])
+        y_values = data.get("yvalues", [])
+        solution = data.get("solution", "")
     except Exception:
         logger.error("Error while getting solution for application %s", application_id)
         await save_user_settings(context)
@@ -853,7 +856,7 @@ async def solution(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
         return MENU
 
-    if result is None:
+    if solution is None:
         logger.info("User %s used unsupported symbols", user.id)
         await save_user_settings(context)
         await processing_message.edit_text(
@@ -870,7 +873,7 @@ async def solution(update: Update, context: ContextTypes.DEFAULT_TYPE):
     )
 
     print_result = print_solution(
-        result,
+        solution,
         context.user_data['order'],
         context.user_data['rounding']
     )
