@@ -19,7 +19,7 @@ services:
       - database
       - server
     networks:
-      - network
+      - net
 
   server:
     build:
@@ -44,7 +44,7 @@ services:
     depends_on:
       - database
     networks:
-      - network
+      - net
 
   database:
     image: postgres:17.5-alpine
@@ -59,11 +59,11 @@ services:
       - pgdata:/var/lib/postgresql/data
       - ./database/schema.sql:/docker-entrypoint-initdb.d/init.sql:ro
     networks:
-      - network
+      - net
 
 volumes:
   pgdata:
 
 networks:
-  network:
+  net:
     driver: bridge
