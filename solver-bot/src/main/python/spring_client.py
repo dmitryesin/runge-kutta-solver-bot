@@ -1,4 +1,3 @@
-import numpy as np
 import asyncio
 import json
 import os
