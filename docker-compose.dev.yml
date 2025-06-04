@@ -1,0 +1,61 @@
+services:
+  client:
+    build:
+      context: .
+      dockerfile: solver-bot/Dockerfile
+    container_name: diffy-bot-client
+    working_dir: /solver-client
+    env_file:
+      - .env
+    environment:
+      - CLIENT_API_URL=http://server:8080/api/solver
+    ports:
+      - "8001:8000"
+    volumes:
+      - .env:/solver-client/.env
+    depends_on:
+      - database
+      - server
+    networks:
+      - net
+
+  server:
+    build:
+      context: .
+      dockerfile: solver-common/Dockerfile
+    container_name: diffy-bot-server
+    working_dir: /solver-server
+    env_file:
+      - .env
+    environment:
+      - DB_HOST=database
+    ports:
+      - "8081:8080"
+    volumes:
+      - .env:/solver-server/.env
+    depends_on:
+      - database
+    networks:
+      - net
+
+  database:
+    image: postgres:17.5-alpine
+    container_name: diffy-bot-database
+    environment:
+      POSTGRES_USER: ${DB_USERNAME}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_DATABASE}
+    ports:
+      - "5433:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./database/schema.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    networks:
+      - net
+
+volumes:
+  pgdata:
+
+networks:
+  net:
+    driver: bridge
