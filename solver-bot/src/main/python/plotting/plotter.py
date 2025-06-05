@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 
 from printing.printer import get_variable_name
 
+
 def plot_solution(x_values, y_values, order):
     plt.clf()
 
@@ -17,7 +18,7 @@ def plot_solution(x_values, y_values, order):
     plt.legend()
 
     buffer = io.BytesIO()
-    plt.savefig(buffer, format='png', bbox_inches="tight")
+    plt.savefig(buffer, format="png", bbox_inches="tight")
 
     plt.close()
 
