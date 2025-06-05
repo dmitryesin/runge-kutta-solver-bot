@@ -123,7 +123,9 @@ public class DBService {
                 SELECT id, parameters, status, created_at, last_updated_at
                 FROM applications
                 WHERE user_id = ?
+                AND status = 'completed'
                 ORDER BY created_at DESC
+                LIMIT 5
                 """;
             try {
                 return jdbcTemplate.query(query, (rs, rowNum) -> {

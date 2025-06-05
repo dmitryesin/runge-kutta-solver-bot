@@ -110,34 +110,8 @@ async def get_recent_applications(user_id):
             try:
                 data = json.loads(text)
             except json.JSONDecodeError:
-                return []
-
-            valid_statuses = {"new", "in_progress", "completed"}
-
-            filtered = []
-
-            if isinstance(data, list):
-                for app in data:
-                    if isinstance(app, dict) and app.get("status") in valid_statuses:
-                        filtered.append(app)
-                        if len(filtered) == 5:
-                            break
-                return filtered
-
-            elif isinstance(data, dict) and "applications" in data:
-                applications = data["applications"]
-                if isinstance(applications, list):
-                    for app in applications:
-                        if (
-                            isinstance(app, dict)
-                            and app.get("status") in valid_statuses
-                        ):
-                            filtered.append(app.get("id") if "id" in app else app)
-                            if len(filtered) == 5:
-                                break
-                    return filtered
-
-            return []
+                return text
+            return data
 
 
 async def get_results(application_id):
