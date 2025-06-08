@@ -1,6 +1,8 @@
 services:
   client:
-    image: ${DOCKERHUB_USERNAME}/${DOCKERHUB_REPOSITORY_CLIENT}:${DOCKERHUB_TAG}
+    build:
+      context: .
+      dockerfile: solver-bot/Dockerfile
     container_name: diffy-bot-client
     working_dir: /solver-client
     env_file:
@@ -18,7 +20,9 @@ services:
       - net
 
   server:
-    image: ${DOCKERHUB_USERNAME}/${DOCKERHUB_REPOSITORY_SERVER}:${DOCKERHUB_TAG}
+    build:
+      context: .
+      dockerfile: solver-common/Dockerfile
     container_name: diffy-bot-server
     working_dir: /solver-server
     env_file:
