@@ -26,7 +26,7 @@ public class SolverController {
     public CompletableFuture<ResponseEntity<String>> setUserSettings(
             @PathVariable("userId") Integer userId,
             @RequestParam("method") String method,
-            @RequestParam("rounding") String rounding,
+            @RequestParam("rounding") Integer rounding,
             @RequestParam("language") String language,
             @RequestParam("hints") Boolean hints) {
         logger.debug("Setting user settings for userId: {}", userId);

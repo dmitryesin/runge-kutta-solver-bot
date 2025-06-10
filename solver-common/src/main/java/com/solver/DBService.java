@@ -40,7 +40,7 @@ public class DBService {
             try {
                 return jdbcTemplate.queryForObject(query, (rs, rowNum) -> {
                     String method = rs.getString("method");
-                    String rounding = rs.getString("rounding");
+                    Integer rounding = rs.getInt("rounding");
                     String language = rs.getString("language");
                     Boolean hints = rs.getBoolean("hints");
                     return Optional.of(
@@ -63,7 +63,7 @@ public class DBService {
 
     @Async
     @Transactional
-    public CompletableFuture<Optional<String>> setUserSettings(Integer userId, String method, String rounding, String language, Boolean hints) {
+    public CompletableFuture<Optional<String>> setUserSettings(Integer userId, String method, Integer rounding, String language, Boolean hints) {
         logger.debug("Setting user settings for userId: {}, method: {}, rounding: {}, language: {}, hints: {}", 
             userId, method, rounding, language, hints);
         return CompletableFuture.supplyAsync(() -> {
