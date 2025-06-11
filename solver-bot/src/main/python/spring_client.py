@@ -45,7 +45,7 @@ async def set_parameters(
             timeout = ClientTimeout(total=REQUEST_TIMEOUT)
             async with ClientSession(timeout=timeout) as session:
                 async with session.post(
-                    f"{os.getenv('CLIENT_API_URL')}/solve/{user_id}", json=payload
+                    f"{os.getenv('CLIENT_API_URL')}/users/{user_id}/solve", json=payload
                 ) as response:
                     response.raise_for_status()
                     return await response.json()
@@ -67,7 +67,7 @@ async def set_user_settings(user_id, method, rounding, language, hints):
     timeout = ClientTimeout(total=REQUEST_TIMEOUT)
     async with ClientSession(timeout=timeout) as session:
         async with session.post(
-            f"{os.getenv('CLIENT_API_URL')}/users/{user_id}", params=payload
+            f"{os.getenv('CLIENT_API_URL')}/users/{user_id}/settings", params=payload
         ) as response:
             response.raise_for_status()
             return await response.text()
@@ -77,7 +77,7 @@ async def get_user_settings(user_id, method, rounding, language, hints):
     timeout = ClientTimeout(total=REQUEST_TIMEOUT)
     async with ClientSession(timeout=timeout) as session:
         async with session.get(
-            f"{os.getenv('CLIENT_API_URL')}/users/{user_id}"
+            f"{os.getenv('CLIENT_API_URL')}/users/{user_id}/settings"
         ) as response:
             if response.status == 500:
                 return {
@@ -100,7 +100,7 @@ async def get_recent_applications(user_id):
     timeout = ClientTimeout(total=REQUEST_TIMEOUT)
     async with ClientSession(timeout=timeout) as session:
         async with session.get(
-            f"{os.getenv('CLIENT_API_URL')}/applications/{user_id}"
+            f"{os.getenv('CLIENT_API_URL')}/users/{user_id}/applications"
         ) as response:
             if response.status == 500:
                 return []
@@ -118,7 +118,7 @@ async def get_results(application_id):
     timeout = ClientTimeout(total=REQUEST_TIMEOUT)
     async with ClientSession(timeout=timeout) as session:
         async with session.get(
-            f"{os.getenv('CLIENT_API_URL')}/results/{application_id}"
+            f"{os.getenv('CLIENT_API_URL')}/applications/{application_id}/results"
         ) as response:
             response.raise_for_status()
             text = await response.text()
