@@ -28,14 +28,41 @@ def plot_solution_save(x_values, y_values, order):
 
     fig.update_layout(
         legend=dict(x=0, y=1),
-        width=900,
-        height=600,
+        margin=dict(l=20, r=20, t=40, b=40),
     )
 
-    html_str = pio.to_html(fig, full_html=False, include_plotlyjs='cdn')
+    html_str = pio.to_html(
+        fig,
+        full_html=False,
+        include_plotlyjs='cdn',
+        config={'responsive': True}
+    )
+
+    responsive_wrapper = f"""
+    <html>
+    <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <style>
+            html, body {{
+                margin: 0;
+                padding: 0;
+                height: 100%;
+                width: 100%;
+            }}
+            .plotly-graph-div {{
+                height: 100% !important;
+                width: 100% !important;
+            }}
+        </style>
+    </head>
+    <body>
+        {html_str}
+    </body>
+    </html>
+    """
 
     buffer = io.BytesIO()
-    buffer.write(html_str.encode('utf-8'))
+    buffer.write(responsive_wrapper.encode('utf-8'))
     buffer.seek(0)
 
     return buffer
