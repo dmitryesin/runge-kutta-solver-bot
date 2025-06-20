@@ -18,7 +18,7 @@
         "back": "\u2039 Back",
         "menu": "\u2039 Menu",
 
-        "plot_save": "Save Plot",
+        "graph_save": "Save Plot",
 
         "enter_equation": "Enter the differential equation.",
         "enter_x": "Enter the initial state of x.",
@@ -91,7 +91,7 @@
         "back": "\u2039 Назад",
         "menu": "\u2039 Меню",
 
-        "plot_save": "Сохранить График",
+        "graph_save": "Сохранить График",
 
         "enter_equation": "Введите дифференциальное уравнение.",
         "enter_x": "Введите начальное значение x.",
@@ -164,7 +164,7 @@
         "back": "\u2039 返回",
         "menu": "\u2039 菜单",
 
-        "plot_save": "保存图表",
+        "graph_save": "保存图表",
 
         "enter_equation": "输入微分方程。",
         "enter_x": "输入x的初始值。",
