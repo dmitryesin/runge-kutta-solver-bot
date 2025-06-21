@@ -16,19 +16,15 @@ def plot_solution_save(x_values, y_values, order):
 
     if isinstance(y_values[0], (list, tuple)):
         for i, name in enumerate(variable_names):
-            fig.add_trace(go.Scatter(
-                x=x_values,
-                y=[y[i] for y in y_values],
-                mode='lines',
-                name=name
-            ))
+            fig.add_trace(
+                go.Scatter(
+                    x=x_values, y=[y[i] for y in y_values], mode="lines", name=name
+                )
+            )
     else:
-        fig.add_trace(go.Scatter(
-            x=x_values,
-            y=y_values,
-            mode='lines',
-            name=variable_names[0]
-        ))
+        fig.add_trace(
+            go.Scatter(x=x_values, y=y_values, mode="lines", name=variable_names[0])
+        )
 
     fig.update_layout(
         legend=dict(x=0, y=1),
@@ -38,12 +34,12 @@ def plot_solution_save(x_values, y_values, order):
     html_str = pio.to_html(
         fig,
         full_html=False,
-        include_plotlyjs='cdn',
+        include_plotlyjs="cdn",
         config={
-            'responsive': True,
-            'scrollZoom': True,
-            'displayModeBar': True,
-        }
+            "responsive": True,
+            "scrollZoom": True,
+            "displayModeBar": True,
+        },
     )
 
     with open(PY_DIR / "template.html", "r", encoding="utf-8") as f:
@@ -52,7 +48,7 @@ def plot_solution_save(x_values, y_values, order):
     full_html = template.render(plot_div=html_str)
 
     buffer = io.BytesIO()
-    buffer.write(full_html.encode('utf-8'))
+    buffer.write(full_html.encode("utf-8"))
     buffer.seek(0)
 
     return buffer
