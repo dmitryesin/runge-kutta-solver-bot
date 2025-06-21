@@ -4,9 +4,8 @@ import json
 from pathlib import Path
 
 PY_DIR = Path(__file__).parent
-functions_path = PY_DIR / "functions.json"
 
-with open(functions_path, "r", encoding="utf-8") as f:
+with open(PY_DIR / "functions.json", "r", encoding="utf-8") as f:
     MATH_FUNCTIONS = json.load(f)
 
 
