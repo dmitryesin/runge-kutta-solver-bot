@@ -1,9 +1,13 @@
 import io
+from pathlib import Path
+
 import matplotlib.pyplot as plt
 import plotly.graph_objs as go
 import plotly.io as pio
-
+from jinja2 import Template
 from printing.printer import get_variable_name
+
+PY_DIR = Path(__file__).parent
 
 
 def plot_solution_save(x_values, y_values, order):
@@ -35,34 +39,20 @@ def plot_solution_save(x_values, y_values, order):
         fig,
         full_html=False,
         include_plotlyjs='cdn',
-        config={'responsive': True}
+        config={
+            'responsive': True,
+            'scrollZoom': True,
+            'displayModeBar': True,
+        }
     )
 
-    responsive_wrapper = f"""
-    <html>
-    <head>
-        <meta name="viewport" content="width=device-width, initial-scale=1">
-        <style>
-            html, body {{
-                margin: 0;
-                padding: 0;
-                height: 100%;
-                width: 100%;
-            }}
-            .plotly-graph-div {{
-                height: 100% !important;
-                width: 100% !important;
-            }}
-        </style>
-    </head>
-    <body>
-        {html_str}
-    </body>
-    </html>
-    """
+    with open(PY_DIR / "template.html", "r", encoding="utf-8") as f:
+        template = Template(f.read())
+
+    full_html = template.render(plot_div=html_str)
 
     buffer = io.BytesIO()
-    buffer.write(responsive_wrapper.encode('utf-8'))
+    buffer.write(full_html.encode('utf-8'))
     buffer.seek(0)
 
     return buffer
